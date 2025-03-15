@@ -1,0 +1,43 @@
+[versions]
+agp = "8.3.2"
+converterGson = "2.9.0"
+githubGlide = "4.12.0"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+appcompat = "1.7.0"
+material = "1.13.0-alpha08"
+constraintlayout = "2.1.4"
+lifecycleRuntimeKtx = "2.8.7"
+activity = "1.9.3"
+retrofitVersion = "2.9.0"
+viewModuleKt = "2.8.7"
+androidxFragmentFragmentKtx2 = "1.8.5"
+reactivexRxandroid = "2.1.1"
+reactivexRxjava = "2.2.21"
+lifecycleViewmodelAndroid = "2.8.7"
+
+[libraries]
+androidx-lifecycle-viewmodule-ktx = {group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "viewModuleKt"}
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-activity-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-fragment-fragment-ktx4 = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragmentFragmentKtx2" }
+com-github-bumptech-glide-glide = { module = "com.github.bumptech.glide:glide", version.ref = "githubGlide" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+
+reactivex-rxandroid = { module = "io.reactivex.rxjava2:rxandroid", version.ref = "reactivexRxandroid" }
+reactivex-rxjava = { module = "io.reactivex.rxjava2:rxjava", version.ref = "reactivexRxjava" }
+androidx-lifecycle-viewmodel-android = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-android", version.ref = "lifecycleViewmodelAndroid" }
+retrofit2-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+
