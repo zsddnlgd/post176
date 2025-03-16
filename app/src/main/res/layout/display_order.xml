@@ -38,7 +38,6 @@
                 android:layout_height="200dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
-                android:background="@color/white"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -288,15 +287,30 @@
                     android:textColor="@color/color_main"
                     android:textSize="30sp" />
 
-                <Button
+                <TextView
                     android:id="@+id/confirm_button"
                     android:layout_width="100dp"
                     android:layout_height="50dp"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:layout_marginEnd="100dp"
+                    android:layout_marginEnd="200dp"
                     android:background="@drawable/bg_button"
+                    android:gravity="center"
                     android:text="确认"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/next_button"
+                    android:layout_width="100dp"
+                    android:layout_height="50dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="50dp"
+                    android:background="@drawable/bg_button"
+                    android:gravity="center"
+                    android:text="下一位"
                     android:textColor="@color/white"
                     android:textSize="20sp"
                     android:visibility="gone" />

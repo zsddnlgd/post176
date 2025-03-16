@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.yangxianwen.post176.base.BaseViewModel;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Student;
+import com.yangxianwen.post176.enmu.OrderStatus;
 import com.yangxianwen.post176.utils.HttpUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.utils.TimeUtil;
@@ -19,6 +20,8 @@ import io.reactivex.disposables.Disposable;
 
 public class OrderViewModel extends BaseViewModel {
 
+    private final MutableLiveData<OrderStatus> orderStatus = new MutableLiveData<>(OrderStatus.identify);
+    private final MutableLiveData<Object> finish = new MutableLiveData<>();
     private final MutableLiveData<String> name = new MutableLiveData<>();
     private final MutableLiveData<String> className = new MutableLiveData<>();
     private final MutableLiveData<String> balance = new MutableLiveData<>();
@@ -35,10 +38,23 @@ public class OrderViewModel extends BaseViewModel {
         super(application);
     }
 
-    public void getStatusInfo(String key) {
-        Student student = SpUtil.getStudent("/Pic/StuImg/" + key + ".jpg");
-        name.postValue("姓名:" + (student != null ? student.getCStudName() : ""));
-        className.postValue("班级:" + (student != null ? student.getCClass() : ""));
+    public void setStatusInfo(String key) {
+        Student student = SpUtil.getStudentByPic("/Pic/StuImg/" + key + ".jpg");
+        setStatusInfo(student);
+    }
+
+    public void setStatusInfo(Student student) {
+        name.postValue("姓名：" + (student != null ? student.getCStudName() : ""));
+        className.postValue("班级：" + (student != null ? student.getCClass() : ""));
+        balance.postValue("余额：" + (student != null ? student.getNBalance() : ""));
+        nfcNumber.postValue("卡号：" + (student != null ? student.getNfcId() : ""));
+    }
+
+    public void clearStatusInfo() {
+        name.postValue("姓名：");
+        className.postValue("班级：");
+        balance.postValue("余额：");
+        nfcNumber.postValue("卡号：");
     }
 
     public void getMeal() {
@@ -60,6 +76,7 @@ public class OrderViewModel extends BaseViewModel {
                 }
                 if (subList.isEmpty()) {
                     tips.postValue("当前不在开餐时间");
+                    finish.postValue(new Object());
                     return;
                 }
                 mealList.postValue(subList);
@@ -128,6 +145,14 @@ public class OrderViewModel extends BaseViewModel {
             return false;
         }
         return meals.contains(meal);
+    }
+
+    public MutableLiveData<OrderStatus> getOrderStatus() {
+        return orderStatus;
+    }
+
+    public MutableLiveData<Object> getFinish() {
+        return finish;
     }
 
     public MutableLiveData<String> getName() {

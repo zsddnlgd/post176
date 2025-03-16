@@ -104,15 +104,12 @@ public class OrderDisplay extends Presentation {
             }
 
             for (View item : items) {
+                View selectView = item.findViewById(R.id.food_select);
                 Meal itemMeal = (Meal) item.getTag();
-                if (mViewModel.containsMealEmpty(itemMeal)) {
-                    item.setBackgroundResource(R.drawable.bg_food_empty);
-                } else {
-                    item.setBackgroundResource(R.drawable.bg_food);
-                }
+                selectView.setVisibility(View.GONE);
                 for (Meal meal : meals) {
                     if (Objects.equals(itemMeal.getCFoodCode(), meal.getCFoodCode())) {
-                        item.setBackgroundResource(R.drawable.bg_food_select);
+                        selectView.setVisibility(View.VISIBLE);
                         break;
                     }
                 }
@@ -124,14 +121,15 @@ public class OrderDisplay extends Presentation {
     }
 
     private void initFace() {
-        File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR + File.separator + userName + FaceServer.IMG_SUFFIX);
+        File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR +
+                File.separator + userName + FaceServer.IMG_SUFFIX);
         Glide.with(getContext())
                 .load(imgFile)
                 .into(mBinding.faceIcon);
     }
 
     private void initListener() {
-        mBinding.confirmButton.setOnClickListener(v -> {
+        mBinding.nextButton.setOnClickListener(v -> {
             mLiveDataManager.clearAllObservers();
             dismiss();
         });
@@ -157,15 +155,12 @@ public class OrderDisplay extends Presentation {
         item.setSelected(false);
         item.setTag(meal);
         item.setOnClickListener(v -> {
+            View emptyView = v.findViewById(R.id.food_empty);
             if (mViewModel.containsMealEmpty(meal)) {
-                if (mViewModel.containsMealSelect(meal)) {
-                    v.setBackgroundResource(R.drawable.bg_food_select);
-                } else {
-                    v.setBackgroundResource(R.drawable.bg_food);
-                }
+                emptyView.setVisibility(View.GONE);
                 mViewModel.removeMealEmpty(meal);
             } else {
-                v.setBackgroundResource(R.drawable.bg_food_empty);
+                emptyView.setVisibility(View.VISIBLE);
                 mViewModel.addMealEmpty(meal);
             }
         });
@@ -191,7 +186,6 @@ public class OrderDisplay extends Presentation {
 
     public void onSelectConfirm() {
         mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.1f元，请打餐！", totalPrice));
-        mBinding.confirmButton.setText("下一位");
-        mBinding.confirmButton.setVisibility(View.VISIBLE);
+        mBinding.nextButton.setVisibility(View.VISIBLE);
     }
 }

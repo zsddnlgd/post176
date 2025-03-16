@@ -1,6 +1,5 @@
 package com.yangxianwen.post176.face;
 
-import android.Manifest;
 import android.content.Context;
 import android.graphics.Point;
 import android.hardware.Camera;
@@ -42,7 +41,6 @@ import com.yangxianwen.post176.face.util.face.RequestLivenessStatus;
 import com.yangxianwen.post176.face.widget.FaceRectView;
 import com.yangxianwen.post176.interfaca.OnRecognizeResultListener;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -107,6 +105,7 @@ public class FaceLayout extends FrameLayout {
     private int frInitCode = -1;
     private int flInitCode = -1;
     private FaceHelper faceHelper;
+    private final List<CompareResult> compareResultList = new ArrayList<>();
     /**
      * 活体检测的开关
      */
@@ -157,35 +156,26 @@ public class FaceLayout extends FrameLayout {
      */
     private ImageView faceImageView;
 
-    private static final int ACTION_REQUEST_PERMISSIONS = 0x001;
     /**
      * 识别阈值
      */
     private static final float SIMILAR_THRESHOLD = 0.8F;
-    /**
-     * 所需的所有权限信息
-     */
-    private static final String[] NEEDED_PERMISSIONS = new String[]{
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_PHONE_STATE
-
-    };
 
     public FaceLayout(@NonNull Context context) {
-        super(context);
+        this(context, null);
     }
 
     public FaceLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
     }
 
     public FaceLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        //本地人脸库初始化
+        FaceServer.getInstance().init(context);
     }
 
     public void init() {
-        //本地人脸库初始化
-        FaceServer.getInstance().init(getContext());
         initView();
         initEngine();
         initCamera();
@@ -202,16 +192,13 @@ public class FaceLayout extends FrameLayout {
      */
     public void initEngine() {
         ftEngine = new FaceEngine();
-        ftInitCode = ftEngine.init(getContext(), DetectMode.ASF_DETECT_MODE_VIDEO, ConfigUtil.getFtOrient(getContext()),
-                16, MAX_DETECT_NUM, FaceEngine.ASF_FACE_DETECT);
+        ftInitCode = ftEngine.init(getContext(), DetectMode.ASF_DETECT_MODE_VIDEO, ConfigUtil.getFtOrient(getContext()), 16, MAX_DETECT_NUM, FaceEngine.ASF_FACE_DETECT);
 
         frEngine = new FaceEngine();
-        frInitCode = frEngine.init(getContext(), DetectMode.ASF_DETECT_MODE_IMAGE, DetectFaceOrientPriority.ASF_OP_0_ONLY,
-                16, MAX_DETECT_NUM, FaceEngine.ASF_FACE_RECOGNITION);
+        frInitCode = frEngine.init(getContext(), DetectMode.ASF_DETECT_MODE_IMAGE, DetectFaceOrientPriority.ASF_OP_0_ONLY, 16, MAX_DETECT_NUM, FaceEngine.ASF_FACE_RECOGNITION);
 
         flEngine = new FaceEngine();
-        flInitCode = flEngine.init(getContext(), DetectMode.ASF_DETECT_MODE_IMAGE, DetectFaceOrientPriority.ASF_OP_0_ONLY,
-                16, MAX_DETECT_NUM, FaceEngine.ASF_LIVENESS);
+        flInitCode = flEngine.init(getContext(), DetectMode.ASF_DETECT_MODE_IMAGE, DetectFaceOrientPriority.ASF_OP_0_ONLY, 16, MAX_DETECT_NUM, FaceEngine.ASF_LIVENESS);
 
         Log.i(TAG, "initEngine:  init: " + ftInitCode);
 
@@ -276,11 +263,15 @@ public class FaceLayout extends FrameLayout {
     }
 
     public void reStart() {
-        Glide.with(getContext())
-                .load(android.R.color.transparent)
-                .into(faceImageView);
+        Glide.with(getContext()).load(android.R.color.transparent).into(faceImageView);
         if (cameraHelper != null && cameraHelper.isStopped()) {
             cameraHelper.start();
+        }
+    }
+
+    public void stop() {
+        if (cameraHelper != null && !cameraHelper.isStopped()) {
+            cameraHelper.stop();
         }
     }
 
@@ -309,31 +300,30 @@ public class FaceLayout extends FrameLayout {
                     //活体检测未出结果，或者非活体，延迟执行该函数
                     else {
                         if (requestFeatureStatusMap.containsKey(requestId)) {
-                            Observable.timer(WAIT_LIVENESS_INTERVAL, TimeUnit.MILLISECONDS)
-                                    .subscribe(new Observer<Long>() {
-                                        Disposable disposable;
+                            Observable.timer(WAIT_LIVENESS_INTERVAL, TimeUnit.MILLISECONDS).subscribe(new Observer<Long>() {
+                                Disposable disposable;
 
-                                        @Override
-                                        public void onSubscribe(Disposable d) {
-                                            disposable = d;
-                                            getFeatureDelayedDisposables.add(disposable);
-                                        }
+                                @Override
+                                public void onSubscribe(Disposable d) {
+                                    disposable = d;
+                                    getFeatureDelayedDisposables.add(disposable);
+                                }
 
-                                        @Override
-                                        public void onNext(Long aLong) {
-                                            onFaceFeatureInfoGet(faceFeature, requestId, errorCode);
-                                        }
+                                @Override
+                                public void onNext(Long aLong) {
+                                    onFaceFeatureInfoGet(faceFeature, requestId, errorCode);
+                                }
 
-                                        @Override
-                                        public void onError(Throwable e) {
+                                @Override
+                                public void onError(Throwable e) {
 
-                                        }
+                                }
 
-                                        @Override
-                                        public void onComplete() {
-                                            getFeatureDelayedDisposables.remove(disposable);
-                                        }
-                                    });
+                                @Override
+                                public void onComplete() {
+                                    getFeatureDelayedDisposables.remove(disposable);
+                                }
+                            });
                         }
                     }
 
@@ -398,29 +388,17 @@ public class FaceLayout extends FrameLayout {
             public void onCameraOpened(Camera camera, int cameraId, int displayOrientation, boolean isMirror) {
                 Camera.Size lastPreviewSize = previewSize;
                 previewSize = camera.getParameters().getPreviewSize();
-                drawHelper = new DrawHelper(previewSize.width, previewSize.height, previewView.getWidth(), previewView.getHeight(), displayOrientation
-                        , cameraId, isMirror, false, false);
+                drawHelper = new DrawHelper(previewSize.width, previewSize.height, previewView.getWidth(), previewView.getHeight(), displayOrientation, cameraId, isMirror, false, false);
                 Log.i(TAG, "onCameraOpened: " + drawHelper.toString());
                 // 切换相机的时候可能会导致预览尺寸发生变化
-                if (faceHelper == null ||
-                        lastPreviewSize == null ||
-                        lastPreviewSize.width != previewSize.width || lastPreviewSize.height != previewSize.height) {
+                if (faceHelper == null || lastPreviewSize == null || lastPreviewSize.width != previewSize.width || lastPreviewSize.height != previewSize.height) {
                     Integer trackedFaceCount = null;
                     // 记录切换时的人脸序号
                     if (faceHelper != null) {
                         trackedFaceCount = faceHelper.getTrackedFaceCount();
                         faceHelper.release();
                     }
-                    faceHelper = new FaceHelper.Builder()
-                            .ftEngine(ftEngine)
-                            .frEngine(frEngine)
-                            .flEngine(flEngine)
-                            .frQueueSize(MAX_DETECT_NUM)
-                            .flQueueSize(MAX_DETECT_NUM)
-                            .previewSize(previewSize)
-                            .faceListener(faceListener)
-                            .trackedFaceCount(trackedFaceCount == null ? ConfigUtil.getTrackedFaceCount(getContext().getApplicationContext()) : trackedFaceCount)
-                            .build();
+                    faceHelper = new FaceHelper.Builder().ftEngine(ftEngine).frEngine(frEngine).flEngine(flEngine).frQueueSize(MAX_DETECT_NUM).flQueueSize(MAX_DETECT_NUM).previewSize(previewSize).faceListener(faceListener).trackedFaceCount(trackedFaceCount == null ? ConfigUtil.getTrackedFaceCount(getContext().getApplicationContext()) : trackedFaceCount).build();
                 }
             }
 
@@ -445,8 +423,7 @@ public class FaceLayout extends FrameLayout {
                          */
                         if (livenessDetect && (status == null || status != RequestFeatureStatus.SUCCEED)) {
                             Integer liveness = livenessMap.get(facePreviewInfoList.get(i).getTrackId());
-                            if (liveness == null
-                                    || (liveness != LivenessInfo.ALIVE && liveness != LivenessInfo.NOT_ALIVE && liveness != RequestLivenessStatus.ANALYZING)) {
+                            if (liveness == null || (liveness != LivenessInfo.ALIVE && liveness != LivenessInfo.NOT_ALIVE && liveness != RequestLivenessStatus.ANALYZING)) {
                                 livenessMap.put(facePreviewInfoList.get(i).getTrackId(), RequestLivenessStatus.ANALYZING);
                                 faceHelper.requestFaceLiveness(nv21, facePreviewInfoList.get(i).getFaceInfo(), previewSize.width, previewSize.height, FaceEngine.CP_PAF_NV21, facePreviewInfoList.get(i).getTrackId(), LivenessType.RGB);
                             }
@@ -455,8 +432,7 @@ public class FaceLayout extends FrameLayout {
                          * 对于每个人脸，若状态为空或者为失败，则请求特征提取（可根据需要添加其他判断以限制特征提取次数），
                          * 特征提取回传的人脸特征结果在{@link FaceListener#onFaceFeatureInfoGet(FaceFeature, Integer, Integer)}中回传
                          */
-                        if (status == null
-                                || status == RequestFeatureStatus.TO_RETRY) {
+                        if (status == null || status == RequestFeatureStatus.TO_RETRY) {
                             requestFeatureStatusMap.put(facePreviewInfoList.get(i).getTrackId(), RequestFeatureStatus.SEARCHING);
                             faceHelper.requestFaceFeature(nv21, facePreviewInfoList.get(i).getFaceInfo(), previewSize.width, previewSize.height, FaceEngine.CP_PAF_NV21, facePreviewInfoList.get(i).getTrackId());
 //                            Log.i(TAG, "onPreview: fr start = " + System.currentTimeMillis() + " trackId = " + facePreviewInfoList.get(i).getTrackedFaceCount());
@@ -484,14 +460,7 @@ public class FaceLayout extends FrameLayout {
             }
         };
 
-        cameraHelper = new CameraHelper.Builder()
-                .previewViewSize(new Point(previewView.getMeasuredWidth(), previewView.getMeasuredHeight()))
-                .rotation(getWindowManager().getDefaultDisplay().getRotation())
-                .specificCameraId(rgbCameraID != null ? rgbCameraID : Camera.CameraInfo.CAMERA_FACING_FRONT)
-                .isMirror(true)
-                .previewOn(previewView)
-                .cameraListener(cameraListener)
-                .build();
+        cameraHelper = new CameraHelper.Builder().previewViewSize(new Point(previewView.getMeasuredWidth(), previewView.getMeasuredHeight())).rotation(getWindowManager().getDefaultDisplay().getRotation()).specificCameraId(rgbCameraID != null ? rgbCameraID : Camera.CameraInfo.CAMERA_FACING_FRONT).isMirror(true).previewOn(previewView).cameraListener(cameraListener).build();
         cameraHelper.init();
         cameraHelper.start();
     }
@@ -500,41 +469,37 @@ public class FaceLayout extends FrameLayout {
         if (registerStatus == REGISTER_STATUS_READY && facePreviewInfoList != null && facePreviewInfoList.size() > 0) {
             registerStatus = REGISTER_STATUS_PROCESSING;
             Observable.create(new ObservableOnSubscribe<Boolean>() {
-                        @Override
-                        public void subscribe(ObservableEmitter<Boolean> emitter) {
+                @Override
+                public void subscribe(ObservableEmitter<Boolean> emitter) {
 
-                            boolean success = FaceServer.getInstance().registerNv21(getContext(), nv21.clone(), previewSize.width, previewSize.height,
-                                    facePreviewInfoList.get(0).getFaceInfo(), "registered " + faceHelper.getTrackedFaceCount());
-                            emitter.onNext(success);
-                        }
-                    })
-                    .subscribeOn(Schedulers.computation())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Boolean>() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
+                    boolean success = FaceServer.getInstance().registerNv21(getContext(), nv21.clone(), previewSize.width, previewSize.height, facePreviewInfoList.get(0).getFaceInfo(), "registered " + faceHelper.getTrackedFaceCount());
+                    emitter.onNext(success);
+                }
+            }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<Boolean>() {
+                @Override
+                public void onSubscribe(Disposable d) {
 
-                        }
+                }
 
-                        @Override
-                        public void onNext(Boolean success) {
-                            String result = success ? "register success!" : "register failed!";
-                            Log.i(TAG, "registerFace: " + result);
-                            registerStatus = REGISTER_STATUS_DONE;
-                        }
+                @Override
+                public void onNext(Boolean success) {
+                    String result = success ? "register success!" : "register failed!";
+                    Log.i(TAG, "registerFace: " + result);
+                    registerStatus = REGISTER_STATUS_DONE;
+                }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            e.printStackTrace();
-                            Log.i(TAG, "registerFace: register failed!");
-                            registerStatus = REGISTER_STATUS_DONE;
-                        }
+                @Override
+                public void onError(Throwable e) {
+                    e.printStackTrace();
+                    Log.i(TAG, "registerFace: register failed!");
+                    registerStatus = REGISTER_STATUS_DONE;
+                }
 
-                        @Override
-                        public void onComplete() {
+                @Override
+                public void onComplete() {
 
-                        }
-                    });
+                }
+            });
         }
     }
 
@@ -559,9 +524,7 @@ public class FaceLayout extends FrameLayout {
                 color = RecognizeColor.COLOR_FAILED;
             }
 
-            drawInfoList.add(new DrawInfo(drawHelper.adjustRect(facePreviewInfoList.get(i).getFaceInfo().getRect()),
-                    GenderInfo.UNKNOWN, AgeInfo.UNKNOWN_AGE, liveness == null ? LivenessInfo.UNKNOWN : liveness, color,
-                    name == null ? String.valueOf(facePreviewInfoList.get(i).getTrackId()) : name));
+            drawInfoList.add(new DrawInfo(drawHelper.adjustRect(facePreviewInfoList.get(i).getFaceInfo().getRect()), GenderInfo.UNKNOWN, AgeInfo.UNKNOWN_AGE, liveness == null ? LivenessInfo.UNKNOWN : liveness, color, name == null ? String.valueOf(facePreviewInfoList.get(i).getTrackId()) : name));
         }
         drawHelper.draw(faceRectView, drawInfoList);
     }
@@ -584,6 +547,13 @@ public class FaceLayout extends FrameLayout {
      * @param facePreviewInfoList 人脸和trackId列表
      */
     private void clearLeftFace(List<FacePreviewInfo> facePreviewInfoList) {
+        if (compareResultList != null) {
+            for (int i = compareResultList.size() - 1; i >= 0; i--) {
+                if (!requestFeatureStatusMap.containsKey(compareResultList.get(i).getTrackId())) {
+                    compareResultList.remove(i);
+                }
+            }
+        }
         if (facePreviewInfoList == null || facePreviewInfoList.size() == 0) {
             requestFeatureStatusMap.clear();
             livenessMap.clear();
@@ -616,64 +586,69 @@ public class FaceLayout extends FrameLayout {
     }
 
     private void searchFace(final FaceFeature frFace, final Integer requestId) {
-        Observable
-                .create(new ObservableOnSubscribe<CompareResult>() {
-                    @Override
-                    public void subscribe(ObservableEmitter<CompareResult> emitter) {
+        Observable.create(new ObservableOnSubscribe<CompareResult>() {
+            @Override
+            public void subscribe(ObservableEmitter<CompareResult> emitter) {
 //                        Log.i(TAG, "subscribe: fr search start = " + System.currentTimeMillis() + " trackId = " + requestId);
-                        CompareResult compareResult = FaceServer.getInstance().getTopOfFaceLib(frFace);
+                CompareResult compareResult = FaceServer.getInstance().getTopOfFaceLib(frFace);
 //                        Log.i(TAG, "subscribe: fr search end = " + System.currentTimeMillis() + " trackId = " + requestId);
-                        emitter.onNext(compareResult);
+                emitter.onNext(compareResult);
 
-                    }
-                })
-                .subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<CompareResult>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
+            }
+        }).subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<CompareResult>() {
+            @Override
+            public void onSubscribe(Disposable d) {
 
-                    }
+            }
 
-                    @Override
-                    public void onNext(CompareResult compareResult) {
-                        if (compareResult == null || compareResult.getUserName() == null) {
-                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
-                            faceHelper.setName(requestId, "VISITOR " + requestId);
-                            return;
-                        }
-                        if (compareResult.getSimilar() > SIMILAR_THRESHOLD) {
-                            File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR + File.separator + compareResult.getUserName() + FaceServer.IMG_SUFFIX);
-                            Glide.with(getContext())
-                                    .load(imgFile)
-                                    .into(faceImageView);
-
-                            requestFeatureStatusMap.put(requestId, RequestFeatureStatus.SUCCEED);
-                            faceHelper.setName(requestId, getContext().getString(R.string.recognize_success_notice, compareResult.getUserName()));
-
-                            if (!cameraHelper.isStopped()) {
-                                cameraHelper.stop();
-                            }
-                            if (mRecognizeResultListener != null) {
-                                mRecognizeResultListener.onRecognizeResult(compareResult);
-                            }
-                        } else {
-                            faceHelper.setName(requestId, getContext().getString(R.string.recognize_failed_notice, "NOT_REGISTERED"));
-                            retryRecognizeDelayed(requestId);
+            @Override
+            public void onNext(CompareResult compareResult) {
+                if (compareResult == null || compareResult.getUserName() == null) {
+                    requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
+                    faceHelper.setName(requestId, "VISITOR " + requestId);
+                    return;
+                }
+                if (compareResult.getSimilar() > SIMILAR_THRESHOLD) {
+                    boolean isAdded = false;
+                    for (CompareResult compareResult1 : compareResultList) {
+                        if (compareResult1.getTrackId() == requestId) {
+                            isAdded = true;
+                            break;
                         }
                     }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        faceHelper.setName(requestId, getContext().getString(R.string.recognize_failed_notice, "NOT_REGISTERED"));
-                        retryRecognizeDelayed(requestId);
+                    if (!isAdded) {
+                        //对于多人脸搜索，假如最大显示数量为 MAX_DETECT_NUM 且有新的人脸进入，则以队列的形式移除
+                        if (!compareResultList.isEmpty()) {
+                            compareResultList.remove(0);
+                        }
+                        //添加显示人员时，保存其trackId
+                        compareResult.setTrackId(requestId);
+                        compareResultList.add(compareResult);
                     }
 
-                    @Override
-                    public void onComplete() {
+                    requestFeatureStatusMap.put(requestId, RequestFeatureStatus.SUCCEED);
+                    faceHelper.setName(requestId, getContext().getString(R.string.recognize_success_notice, compareResult.getUserName()));
 
+                    if (mRecognizeResultListener != null) {
+                        mRecognizeResultListener.onRecognizeResult(compareResult);
                     }
-                });
+                } else {
+                    faceHelper.setName(requestId, getContext().getString(R.string.recognize_failed_notice, "NOT_REGISTERED"));
+                    retryRecognizeDelayed(requestId);
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                faceHelper.setName(requestId, getContext().getString(R.string.recognize_failed_notice, "NOT_REGISTERED"));
+                retryRecognizeDelayed(requestId);
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
     }
 
     /**
@@ -712,36 +687,35 @@ public class FaceLayout extends FrameLayout {
      * @param requestId 人脸ID
      */
     private void retryLivenessDetectDelayed(final Integer requestId) {
-        Observable.timer(FAIL_RETRY_INTERVAL, TimeUnit.MILLISECONDS)
-                .subscribe(new Observer<Long>() {
-                    Disposable disposable;
+        Observable.timer(FAIL_RETRY_INTERVAL, TimeUnit.MILLISECONDS).subscribe(new Observer<Long>() {
+            Disposable disposable;
 
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        disposable = d;
-                        delayFaceTaskCompositeDisposable.add(disposable);
-                    }
+            @Override
+            public void onSubscribe(Disposable d) {
+                disposable = d;
+                delayFaceTaskCompositeDisposable.add(disposable);
+            }
 
-                    @Override
-                    public void onNext(Long aLong) {
+            @Override
+            public void onNext(Long aLong) {
 
-                    }
+            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        e.printStackTrace();
-                    }
+            @Override
+            public void onError(Throwable e) {
+                e.printStackTrace();
+            }
 
-                    @Override
-                    public void onComplete() {
-                        // 将该人脸状态置为UNKNOWN，帧回调处理时会重新进行活体检测
-                        if (livenessDetect) {
-                            faceHelper.setName(requestId, Integer.toString(requestId));
-                        }
-                        livenessMap.put(requestId, LivenessInfo.UNKNOWN);
-                        delayFaceTaskCompositeDisposable.remove(disposable);
-                    }
-                });
+            @Override
+            public void onComplete() {
+                // 将该人脸状态置为UNKNOWN，帧回调处理时会重新进行活体检测
+                if (livenessDetect) {
+                    faceHelper.setName(requestId, Integer.toString(requestId));
+                }
+                livenessMap.put(requestId, LivenessInfo.UNKNOWN);
+                delayFaceTaskCompositeDisposable.remove(disposable);
+            }
+        });
     }
 
     /**
@@ -751,34 +725,33 @@ public class FaceLayout extends FrameLayout {
      */
     private void retryRecognizeDelayed(final Integer requestId) {
         requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
-        Observable.timer(FAIL_RETRY_INTERVAL, TimeUnit.MILLISECONDS)
-                .subscribe(new Observer<Long>() {
-                    Disposable disposable;
+        Observable.timer(FAIL_RETRY_INTERVAL, TimeUnit.MILLISECONDS).subscribe(new Observer<Long>() {
+            Disposable disposable;
 
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        disposable = d;
-                        delayFaceTaskCompositeDisposable.add(disposable);
-                    }
+            @Override
+            public void onSubscribe(Disposable d) {
+                disposable = d;
+                delayFaceTaskCompositeDisposable.add(disposable);
+            }
 
-                    @Override
-                    public void onNext(Long aLong) {
+            @Override
+            public void onNext(Long aLong) {
 
-                    }
+            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        e.printStackTrace();
-                    }
+            @Override
+            public void onError(Throwable e) {
+                e.printStackTrace();
+            }
 
-                    @Override
-                    public void onComplete() {
-                        // 将该人脸特征提取状态置为FAILED，帧回调处理时会重新进行活体检测
-                        faceHelper.setName(requestId, Integer.toString(requestId));
-                        requestFeatureStatusMap.put(requestId, RequestFeatureStatus.TO_RETRY);
-                        delayFaceTaskCompositeDisposable.remove(disposable);
-                    }
-                });
+            @Override
+            public void onComplete() {
+                // 将该人脸特征提取状态置为FAILED，帧回调处理时会重新进行活体检测
+                faceHelper.setName(requestId, Integer.toString(requestId));
+                requestFeatureStatusMap.put(requestId, RequestFeatureStatus.TO_RETRY);
+                delayFaceTaskCompositeDisposable.remove(disposable);
+            }
+        });
     }
 
     private WindowManager getWindowManager() {

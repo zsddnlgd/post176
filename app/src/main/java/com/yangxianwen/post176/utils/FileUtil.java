@@ -2,13 +2,15 @@ package com.yangxianwen.post176.utils;
 
 import android.util.Log;
 
+import com.yangxianwen.post176.face.faceserver.FaceServer;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
-public class FileUtils {
+public class FileUtil {
 
-    private static final String TAG = FileUtils.class.getName();
+    private static final String TAG = FileUtil.class.getName();
 
     /**
      * 将文件流转为本地图片
@@ -46,7 +48,7 @@ public class FileUtils {
         }
     }
 
-    public static void createPath(String filePath){
+    public static void createPath(String filePath) {
         File file = new File(filePath);
 
         try {
@@ -55,13 +57,17 @@ public class FileUtils {
             }
 
             if (!file.isDirectory()) {
-                if (!file.mkdir()){
+                if (!file.mkdir()) {
                     Log.e(TAG, "createPath: file mkdir fail");
                 }
             }
         } catch (Exception e) {
             Log.e(TAG, "createPath file", e);
         }
+    }
+
+    public static File getFileByName(String fileName) {
+        return new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR + File.separator + fileName + FaceServer.IMG_SUFFIX);
     }
 
 }

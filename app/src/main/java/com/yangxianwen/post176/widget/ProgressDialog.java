@@ -53,7 +53,7 @@ public class ProgressDialog extends AlertDialog {
     }
 
     public void setTitleText(String titleText) {
-        setTitle("titleText");
+        setTitle(titleText);
     }
 
     public void setContentText(String contentText) {

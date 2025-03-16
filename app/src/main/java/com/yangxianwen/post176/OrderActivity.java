@@ -1,6 +1,7 @@
 package com.yangxianwen.post176;
 
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -9,12 +10,18 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
+import com.bumptech.glide.Glide;
 import com.yangxianwen.post176.base.BaseMvvmActivity;
 import com.yangxianwen.post176.bean.Meal;
+import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.DisplayOrderBinding;
+import com.yangxianwen.post176.face.faceserver.FaceServer;
+import com.yangxianwen.post176.resolver.BarcodeScannerResolver;
+import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
 import com.yangxianwen.post176.widget.ProgressDialog;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
@@ -29,6 +36,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
     private double totalPrice = 0;
 
+    private BarcodeScannerResolver mBarcodeScannerResolver;
+
     @Override
     protected int getLayoutId() {
         return R.layout.display_order;
@@ -42,6 +51,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
         initFace();
 
+        initBarcodeScanner();
+
         initListener();
 
         mProgressDialog = new ProgressDialog(getActivity(), ProgressDialog.loading);
@@ -51,11 +62,33 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mBinding.face.destroy();
+        mBarcodeScannerResolver.removeScanSuccessListener();
+    }
+
+    @Override
     public void afterRequestPermission(int requestCode, boolean isAllGranted) {
 
     }
 
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        boolean isIntercept = mBarcodeScannerResolver.resolveKeyEvent(event);
+        if (isIntercept) {
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
     private void initObserveForever() {
+        mLiveDataManager.observeForever(mViewModel.getFinish(), o -> {
+            if (o != null) {
+                finish();
+            }
+        });
+
         mLiveDataManager.observeForever(mViewModel.getName(), s -> {
             if (s == null) {
                 return;
@@ -114,17 +147,14 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             }
 
             for (View item : items) {
+                View emptyView = item.findViewById(R.id.food_empty);
                 Meal itemMeal = (Meal) item.getTag();
-                if (mViewModel.containsMealSelect(itemMeal)) {
-                    item.setBackgroundResource(R.drawable.bg_food_select);
-                } else {
-                    item.setBackgroundResource(R.drawable.bg_food);
-                }
+                emptyView.setVisibility(View.GONE);
                 item.setEnabled(true);
                 for (Meal meal : meals) {
                     if (Objects.equals(itemMeal.getCFoodCode(), meal.getCFoodCode())) {
                         item.setEnabled(false);
-                        item.setBackgroundResource(R.drawable.bg_food_empty);
+                        emptyView.setVisibility(View.VISIBLE);
                         break;
                     }
                 }
@@ -138,12 +168,50 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             if (result == null) {
                 return;
             }
-            mViewModel.getStatusInfo(result.getUserName());
+
+            mBinding.face.stop();
+
+            File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR +
+                    File.separator + result.getUserName() + FaceServer.IMG_SUFFIX);
+            Glide.with(getActivity()).load(imgFile).into(mBinding.faceIcon);
+
+            mViewModel.setStatusInfo(result.getUserName());
             mBinding.confirmButton.setVisibility(View.VISIBLE);
+            mBinding.nextButton.setVisibility(View.VISIBLE);
             //显示副屏
             showPresentation(result.getUserName());
         });
 
+    }
+
+    private void initBarcodeScanner() {
+        mBarcodeScannerResolver = new BarcodeScannerResolver();
+        mBarcodeScannerResolver.setScanSuccessListener(barcode -> {
+            if (barcode == null || barcode.length() != 17) {
+                return;
+            }
+            barcode = barcode.replace("0000000", "");
+            Student student = SpUtil.getStudentByNfc(barcode);
+            if (student == null) {
+                showToast("未获取到绑定学生信息");
+                return;
+            }
+
+            String userName = student.getCPic().replace("/Pic/StuImg/", "")
+                    .replace(".jpg", "");
+
+            mBinding.face.stop();
+
+            File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR +
+                    File.separator + userName + FaceServer.IMG_SUFFIX);
+            Glide.with(getActivity()).load(imgFile).into(mBinding.faceIcon);
+
+            mViewModel.setStatusInfo(student);
+            mBinding.confirmButton.setVisibility(View.VISIBLE);
+            mBinding.nextButton.setVisibility(View.VISIBLE);
+            //显示副屏
+            showPresentation(userName);
+        });
     }
 
     private void initListener() {
@@ -157,6 +225,10 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
             mProgressDialog.setContentText("正在打餐...");
             mProgressDialog.show();
+        });
+        mBinding.nextButton.setOnClickListener(v -> {
+            //取消打餐
+            orderFinish();
         });
     }
 
@@ -180,11 +252,12 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
         item.setSelected(false);
         item.setTag(meal);
         item.setOnClickListener(v -> {
+            View selectView = v.findViewById(R.id.food_select);
             if (mViewModel.containsMealSelect(meal)) {
-                v.setBackgroundResource(R.drawable.bg_food);
+                selectView.setVisibility(View.GONE);
                 mViewModel.removeMealSelect(meal);
             } else {
-                v.setBackgroundResource(R.drawable.bg_food_select);
+                selectView.setVisibility(View.VISIBLE);
                 mViewModel.addMealSelect(meal);
             }
             //更新总价
@@ -212,27 +285,33 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             if (mProgressDialog != null && mProgressDialog.isShowing()) {
                 mProgressDialog.dismiss();
             }
-
-            mBinding.face.reStart();
-
-            mViewModel.getStatusInfo("null");
-
-            mBinding.confirmButton.setVisibility(View.GONE);
-
-            mViewModel.getMealSelectList().setValue(new ArrayList<>());
-            for (View item : items) {
-                Meal meal = (Meal) item.getTag();
-                if (mViewModel.containsMealEmpty(meal)) {
-                    item.setBackgroundResource(R.drawable.bg_food_empty);
-                } else {
-                    item.setBackgroundResource(R.drawable.bg_food);
-                }
-            }
-
-            //更新总价
-            updatePrice();
+            orderFinish();
         });
         orderDisplay.setUserName(userName);
         orderDisplay.show();
+    }
+
+    private void orderFinish() {
+        mBinding.face.reStart();
+
+        mViewModel.clearStatusInfo();
+
+        mBinding.confirmButton.setVisibility(View.GONE);
+        mBinding.nextButton.setVisibility(View.GONE);
+
+        mViewModel.getMealSelectList().setValue(new ArrayList<>());
+        for (View item : items) {
+            View selectView = item.findViewById(R.id.food_select);
+            selectView.setVisibility(View.GONE);
+            View emptyView = item.findViewById(R.id.food_empty);
+            Meal meal = (Meal) item.getTag();
+            if (mViewModel.containsMealEmpty(meal)) {
+                emptyView.setVisibility(View.VISIBLE);
+            } else {
+                emptyView.setVisibility(View.GONE);
+            }
+        }
+        //更新总价
+        updatePrice();
     }
 }

@@ -18,7 +18,7 @@ import com.arcsoft.imageutil.ArcSoftImageUtilError;
 import com.yangxianwen.post176.R;
 import com.yangxianwen.post176.base.BaseActivity;
 import com.yangxianwen.post176.face.faceserver.FaceServer;
-import com.yangxianwen.post176.utils.FileUtils;
+import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.widget.ProgressDialog;
 
 import java.io.File;
@@ -51,13 +51,13 @@ public class FaceManageActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_face_manage);
 
-        FileUtils.createPath(REGISTER_DIR);
-        FileUtils.createPath(REGISTER_FAILED_DIR);
+        FileUtil.createPath(REGISTER_DIR);
+        FileUtil.createPath(REGISTER_FAILED_DIR);
 
         executorService = Executors.newSingleThreadExecutor();
         tvNotificationRegisterResult = findViewById(R.id.notification_register_result);
         progressDialog = new ProgressDialog(this, ProgressDialog.update);
-        progressDialog.setTitleText("注册，请稍候...");
+        progressDialog.setTitleText("注册中，请稍候...");
         progressDialog.setContentText("正在获取进度...");
         FaceServer.getInstance().init(this);
     }

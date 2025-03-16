@@ -8,7 +8,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.yangxianwen.post176.base.BaseViewModel;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.face.FaceManageActivity;
-import com.yangxianwen.post176.utils.FileUtils;
+import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.HttpUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 
@@ -51,10 +51,12 @@ public class MainViewModel extends BaseViewModel {
                     }
                     //先处理一年级数据
                     if (student.getCStudCode().startsWith("24")) {
+                        student.setNfcId("3162735690");
                         subList.add(student);
-                        SpUtil.putStudent(student.getCPic(), student);
                     }
                 }
+
+                SpUtil.putStudent(subList);
 
                 studentSize.setValue(subList.size());
 
@@ -87,7 +89,7 @@ public class MainViewModel extends BaseViewModel {
 
             @Override
             public void onNext(ResponseBody responseBody) {
-                FileUtils.savePhoto(filePath, responseBody.byteStream());
+                FileUtil.savePhoto(filePath, responseBody.byteStream());
 
                 students.remove(0);
                 studentProgress.postValue(size - students.size());

@@ -12,7 +12,6 @@ import com.yangxianwen.post176.base.BaseMvvmActivity;
 import com.yangxianwen.post176.databinding.DisplayMainBinding;
 import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.utils.ActiveUtil;
-import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.viewmodel.MainViewModel;
 import com.yangxianwen.post176.widget.ProgressDialog;
 
@@ -41,6 +40,27 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, DisplayMainBin
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mLiveDataManager.observeForever(mViewModel.getStudentSize(), integer -> {
+            if (progressDialog != null) {
+                progressDialog.setMaxProgress(integer);
+                progressDialog.refreshProgress(0);
+            }
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getStudentProgress(), integer -> {
+            if (progressDialog != null) {
+                progressDialog.refreshProgress(integer);
+            }
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getStudentFinish(), aBoolean -> {
+            if (aBoolean) {
+                if (progressDialog != null) {
+                    progressDialog.dismiss();
+                }
+            }
+        });
+
         if (checkPermissions(NEEDED_PERMISSIONS)) {
             ActiveUtil.activeEngine(this, success -> {
                 if (success) {
@@ -50,27 +70,6 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, DisplayMainBin
         } else {
             ActivityCompat.requestPermissions(this, NEEDED_PERMISSIONS, ACTION_REQUEST_PERMISSIONS);
         }
-
-        mViewModel.getStudentSize().observeForever(integer -> {
-            if (progressDialog != null) {
-                progressDialog.setMaxProgress(integer);
-                progressDialog.refreshProgress(0);
-            }
-        });
-
-        mViewModel.getStudentProgress().observeForever(integer -> {
-            if (progressDialog != null) {
-                progressDialog.refreshProgress(integer);
-            }
-        });
-
-        mViewModel.getStudentFinish().observeForever(aBoolean -> {
-            if (aBoolean) {
-                if (progressDialog != null) {
-                    progressDialog.dismiss();
-                }
-            }
-        });
     }
 
     @Override
@@ -97,9 +96,6 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, DisplayMainBin
     }
 
     public void onUpdate(View view) {
-        NavigationBarUtil.focusNotAle(getWindow());
-        NavigationBarUtil.clearFocusNotAle(getWindow());
-
         progressDialog = new ProgressDialog(this, ProgressDialog.update);
         progressDialog.setTitleText("更新中，请稍候...");
         progressDialog.setContentText("正在获取进度...");

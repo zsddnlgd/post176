@@ -18,18 +18,35 @@
         tools:text="麻辣鸡丝" />
 
     <TextView
+        android:id="@+id/food_empty"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/bg_round"
+        android:gravity="center"
+        android:text="告罄"
+        android:textColor="#FF0000"
+        android:textSize="8sp"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/food_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="30dp"
         android:scaleType="fitXY"
         tools:text="12元" />
 
-    <View
-        android:id="@+id/state"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent" />
+    <ImageView
+        android:id="@+id/food_select"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerInParent="true"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/ic_select"
+        android:visibility="gone" />
 
 </RelativeLayout>
