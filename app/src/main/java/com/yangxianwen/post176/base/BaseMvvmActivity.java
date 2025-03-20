@@ -20,13 +20,27 @@ public abstract class BaseMvvmActivity<VM extends BaseViewModel, VB extends View
 
     protected LiveDataManager mLiveDataManager;
 
+    protected abstract int getLayoutId();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mBinding = (VB) DataBindingUtil.setContentView(getActivity(), getLayoutId());
         initViewModel();
-        mViewModel.getTips().observeForever(this::showToast);
         mLiveDataManager = new LiveDataManager();
+        mLiveDataManager.observeForever(mViewModel.getTips(), s -> {
+            if (s == null) {
+                return;
+            }
+            showToast(s);
+        });
+        mLiveDataManager.observeForever(mViewModel.getCloseLoading(), o -> {
+            if (o == null) {
+                return;
+            }
+            dismissLoading();
+            dismissUpdateLoading();
+        });
     }
 
     @Override
@@ -48,6 +62,4 @@ public abstract class BaseMvvmActivity<VM extends BaseViewModel, VB extends View
             getLifecycle().addObserver(mViewModel);
         }
     }
-
-    protected abstract int getLayoutId();
 }

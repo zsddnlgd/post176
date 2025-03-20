@@ -15,11 +15,10 @@ import com.yangxianwen.post176.base.BaseMvvmActivity;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.DisplayOrderBinding;
-import com.yangxianwen.post176.face.faceserver.FaceServer;
+import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.resolver.BarcodeScannerResolver;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
-import com.yangxianwen.post176.widget.ProgressDialog;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,13 +29,13 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
     private OrderDisplay orderDisplay;
 
-    private ProgressDialog mProgressDialog;
-
     private final ArrayList<View> items = new ArrayList<>();
 
     private double totalPrice = 0;
 
     private BarcodeScannerResolver mBarcodeScannerResolver;
+
+    private Student currentStudent = null;
 
     @Override
     protected int getLayoutId() {
@@ -55,10 +54,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
         initListener();
 
-        mProgressDialog = new ProgressDialog(getActivity(), ProgressDialog.loading);
-        mProgressDialog.setContentText("正在获取菜单...");
-        mProgressDialog.show();
-        mViewModel.getMeal();
+        getMeal();
     }
 
     @Override
@@ -71,6 +67,11 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
     @Override
     public void afterRequestPermission(int requestCode, boolean isAllGranted) {
 
+    }
+
+    @Override
+    public boolean needHideNavigationBar() {
+        return true;
     }
 
     @Override
@@ -103,15 +104,39 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             mBinding.cClass.setText(s);
         });
 
-        mLiveDataManager.observeForever(mViewModel.getLoading(), aBoolean -> {
-            if (aBoolean == null) {
+        mLiveDataManager.observeForever(mViewModel.getBalance(), s -> {
+            if (s == null) {
                 return;
             }
-            if (!aBoolean) {
-                if (mProgressDialog != null && mProgressDialog.isShowing()) {
-                    mProgressDialog.dismiss();
-                }
+            mBinding.nBalance.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getNfcNumber(), s -> {
+            if (s == null) {
+                return;
             }
+            mBinding.nfcId.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getStepNumber(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.iStep.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getDistance(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.iDistance.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getCalorie(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.iCalorie.setText(s);
         });
 
         mLiveDataManager.observeForever(mViewModel.getMealList(), meals -> {
@@ -160,6 +185,15 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
                 }
             }
         });
+
+        mLiveDataManager.observeForever(mViewModel.getOrderResult(), o -> {
+            if (o == null) {
+                return;
+            }
+
+            showLoading("正在打餐，请等待...");
+            orderDisplay.onSelectConfirm();
+        });
     }
 
     private void initFace() {
@@ -168,18 +202,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             if (result == null) {
                 return;
             }
-
-            mBinding.face.stop();
-
-            File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR +
-                    File.separator + result.getUserName() + FaceServer.IMG_SUFFIX);
-            Glide.with(getActivity()).load(imgFile).into(mBinding.faceIcon);
-
-            mViewModel.setStatusInfo(result.getUserName());
-            mBinding.confirmButton.setVisibility(View.VISIBLE);
-            mBinding.nextButton.setVisibility(View.VISIBLE);
-            //显示副屏
-            showPresentation(result.getUserName());
+            Student student = SpUtil.getStudentByPic(String.format("/Pic/StuImg/%s.jpg", result.getUserName()));
+            showStudentInfo(student);
         });
 
     }
@@ -191,26 +215,13 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
                 return;
             }
             barcode = barcode.replace("0000000", "");
-            Student student = SpUtil.getStudentByNfc(barcode);
-            if (student == null) {
-                showToast("未获取到绑定学生信息");
-                return;
+            if (currentStudent == null) {
+                Student student = SpUtil.getStudentByNfc(barcode);
+                showStudentInfo(student);
+            } else {
+                showLoading("正在绑定NFC...");
+                mViewModel.bindRfid(barcode, currentStudent);
             }
-
-            String userName = student.getCPic().replace("/Pic/StuImg/", "")
-                    .replace(".jpg", "");
-
-            mBinding.face.stop();
-
-            File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR +
-                    File.separator + userName + FaceServer.IMG_SUFFIX);
-            Glide.with(getActivity()).load(imgFile).into(mBinding.faceIcon);
-
-            mViewModel.setStatusInfo(student);
-            mBinding.confirmButton.setVisibility(View.VISIBLE);
-            mBinding.nextButton.setVisibility(View.VISIBLE);
-            //显示副屏
-            showPresentation(userName);
         });
     }
 
@@ -221,15 +232,28 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
                 return;
             }
 
-            orderDisplay.onSelectConfirm();
+            if (!mViewModel.canBuy()) {
+                showToast("您的余额不足！");
+                return;
+            }
 
-            mProgressDialog.setContentText("正在打餐...");
-            mProgressDialog.show();
+            showLoading("正在创建订单...");
+            mViewModel.createOrder(currentStudent);
         });
         mBinding.nextButton.setOnClickListener(v -> {
             //取消打餐
             orderFinish();
         });
+    }
+
+    private void getMeal() {
+        showLoading("正在获取菜单...");
+        mViewModel.getMeal();
+    }
+
+    private void getBalance(Student student) {
+        showLoading("正在获取账户余额...");
+        mViewModel.getBalances(student);
     }
 
     private void addFood(Meal meal, LinearLayout... linearLayouts) {
@@ -246,7 +270,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
         TextView name = item.findViewById(R.id.food_name);
         TextView price = item.findViewById(R.id.food_price);
         name.setText(meal.getCFoodName());
-        price.setText(String.format(Locale.getDefault(), "%.1f元", meal.getNSum()));
+        price.setText(String.format(Locale.getDefault(), "%.2f元", meal.getNSum()));
         layout.addView(item);
 
         item.setSelected(false);
@@ -262,6 +286,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             }
             //更新总价
             updatePrice();
+            //更新卡路里建议
+            updateCalorie();
         });
         items.add(item);
     }
@@ -275,23 +301,46 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
                 totalPrice += meal.getNSum();
             }
         }
-        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.1f元", totalPrice));
+        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元", totalPrice));
     }
 
-    private void showPresentation(String userName) {
+    private void updateCalorie() {
+        if (!mViewModel.hasSportsData()) {
+            for (View item : items) {
+                item.setBackgroundResource(R.drawable.bg_food);
+            }
+            return;
+        }
+
+        for (View item : items) {
+            Meal meal = (Meal) item.getTag();
+            if (mViewModel.containsMealSelect(meal)) {
+                item.setBackgroundResource(R.drawable.bg_food);
+                continue;
+            }
+            if (mViewModel.suggestBuy(meal)) {
+                item.setBackgroundResource(R.drawable.bg_food_select);
+            } else {
+                item.setBackgroundResource(R.drawable.bg_food_empty);
+            }
+        }
+    }
+
+    private void showPresentation(Student student) {
         orderDisplay = new OrderDisplay(this, getPresentationDisplays());
         orderDisplay.setViewModel(mViewModel);
         orderDisplay.setOnDismissListener(dialog -> {
-            if (mProgressDialog != null && mProgressDialog.isShowing()) {
-                mProgressDialog.dismiss();
-            }
+            dismissLoading();
             orderFinish();
         });
-        orderDisplay.setUserName(userName);
+        orderDisplay.setStudent(student);
         orderDisplay.show();
     }
 
     private void orderFinish() {
+        currentStudent = null;
+
+        Glide.with(getActivity()).load(android.R.color.transparent).into(mBinding.faceIcon);
         mBinding.face.reStart();
 
         mViewModel.clearStatusInfo();
@@ -311,7 +360,35 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
                 emptyView.setVisibility(View.GONE);
             }
         }
+
         //更新总价
         updatePrice();
+        //更新卡路里建议
+        updateCalorie();
+    }
+
+    private void showStudentInfo(Student student) {
+        if (student == null) {
+            showToast("未获取到学生信息");
+            return;
+        }
+
+        currentStudent = student;
+
+        String filePath = student.getCPic().replace("/Pic/StuImg", FaceManageActivity.REGISTER_DIR);
+        Glide.with(getActivity()).load(new File(filePath)).into(mBinding.faceIcon);
+        mBinding.face.stop();
+
+        mViewModel.setStatusInfo(student);
+
+        mBinding.confirmButton.setVisibility(View.VISIBLE);
+        mBinding.nextButton.setVisibility(View.VISIBLE);
+
+        //更新卡路里建议
+        updateCalorie();
+        //实时查询余额
+        getBalance(student);
+        //显示副屏
+        showPresentation(student);
     }
 }

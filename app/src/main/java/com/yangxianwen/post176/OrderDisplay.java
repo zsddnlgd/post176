@@ -12,8 +12,9 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.yangxianwen.post176.bean.Meal;
+import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.DisplayOrderBinding;
-import com.yangxianwen.post176.face.faceserver.FaceServer;
+import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.manager.LiveDataManager;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
 
@@ -29,7 +30,7 @@ public class OrderDisplay extends Presentation {
 
     protected LiveDataManager mLiveDataManager;
 
-    private String userName;
+    private Student student;
 
     private double totalPrice = 0;
 
@@ -69,6 +70,41 @@ public class OrderDisplay extends Presentation {
                 return;
             }
             mBinding.cClass.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getBalance(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.nBalance.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getNfcNumber(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.nfcId.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getStepNumber(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.iStep.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getDistance(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.iDistance.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getCalorie(), s -> {
+            if (s == null) {
+                return;
+            }
+            mBinding.iCalorie.setText(s);
         });
 
         mLiveDataManager.observeForever(mViewModel.getMealList(), meals -> {
@@ -121,11 +157,8 @@ public class OrderDisplay extends Presentation {
     }
 
     private void initFace() {
-        File imgFile = new File(FaceServer.ROOT_PATH + File.separator + FaceServer.SAVE_IMG_DIR +
-                File.separator + userName + FaceServer.IMG_SUFFIX);
-        Glide.with(getContext())
-                .load(imgFile)
-                .into(mBinding.faceIcon);
+        String filePath = student.getCPic().replace("/Pic/StuImg", FaceManageActivity.REGISTER_DIR);
+        Glide.with(getContext()).load(new File(filePath)).into(mBinding.faceIcon);
     }
 
     private void initListener() {
@@ -149,7 +182,7 @@ public class OrderDisplay extends Presentation {
         TextView name = item.findViewById(R.id.food_name);
         TextView price = item.findViewById(R.id.food_price);
         name.setText(meal.getCFoodName());
-        price.setText(String.format(Locale.getDefault(), "%.1f元", meal.getNSum()));
+        price.setText(String.format(Locale.getDefault(), "%.2f元", meal.getNSum()));
         layout.addView(item);
 
         item.setSelected(false);
@@ -173,19 +206,19 @@ public class OrderDisplay extends Presentation {
         for (Meal meal : meals) {
             totalPrice += meal.getNSum();
         }
-        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.1f元", totalPrice));
+        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元", totalPrice));
     }
 
     public void setViewModel(OrderViewModel viewModel) {
         mViewModel = viewModel;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setStudent(Student student) {
+        this.student = student;
     }
 
     public void onSelectConfirm() {
-        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.1f元，请打餐！", totalPrice));
+        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元，请打餐！", totalPrice));
         mBinding.nextButton.setVisibility(View.VISIBLE);
     }
 }

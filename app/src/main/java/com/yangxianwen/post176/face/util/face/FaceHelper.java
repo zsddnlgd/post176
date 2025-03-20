@@ -205,7 +205,7 @@ public class FaceHelper {
         if (faceListener != null) {
             if (ftEngine != null) {
                 faceInfoList.clear();
-                long ftStartTime = System.currentTimeMillis();
+                Log.i(TAG, "onPreviewFrame3 : " + previewSize.width + "  " + previewSize.height);
                 int code = ftEngine.detectFaces(nv21, previewSize.width, previewSize.height, FaceEngine.CP_PAF_NV21, faceInfoList);
                 if (code != ErrorInfo.MOK) {
                     faceListener.onFail(new Exception("ft failed,code is " + code));

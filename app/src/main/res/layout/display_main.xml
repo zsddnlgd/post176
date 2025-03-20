@@ -72,8 +72,8 @@
             android:layout_marginStart="10dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/bg_button"
-            android:onClick="onUpdate"
-            android:text="更新数据"
+            android:onClick="onSetting"
+            android:text="设置"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             app:layout_constraintBaseline_toBottomOf="parent"
@@ -87,12 +87,27 @@
             android:layout_marginStart="10dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/bg_button"
+            android:onClick="onUpdate"
+            android:text="更新数据"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            app:layout_constraintBaseline_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/settings_button" />
+
+        <Button
+            android:id="@+id/register_button"
+            android:layout_width="60dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_button"
             android:onClick="onRegister"
             android:text="注册人脸"
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/settings_button" />
+            app:layout_constraintStart_toEndOf="@id/update_button" />
 
         <Button
             android:id="@+id/exit_button"
@@ -106,7 +121,21 @@
             android:textColor="#FFFFFF"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/update_button" />
+            app:layout_constraintStart_toEndOf="@id/register_button" />
+
+        <Button
+            android:id="@+id/device_number"
+            android:layout_width="85dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_button"
+            android:text="本机编号："
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

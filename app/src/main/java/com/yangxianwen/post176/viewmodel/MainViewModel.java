@@ -1,34 +1,46 @@
 package com.yangxianwen.post176.viewmodel;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 
 import com.yangxianwen.post176.base.BaseViewModel;
+import com.yangxianwen.post176.bean.Nfc;
 import com.yangxianwen.post176.bean.Student;
+import com.yangxianwen.post176.bean.StudentSports;
 import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.HttpUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.ResponseBody;
 
 public class MainViewModel extends BaseViewModel {
 
     private final MutableLiveData<Integer> studentSize = new MutableLiveData<>();
     private final MutableLiveData<Integer> studentProgress = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> studentFinish = new MutableLiveData<>();
+    private final MutableLiveData<Object> syncFinish = new MutableLiveData<>();
+
+    private boolean canDownload;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
     }
 
     public void registerStatusPic() {
+        canDownload = true;
         HttpUtil.getStudent(new Observer<>() {
             @Override
             public void onSubscribe(Disposable d) {
@@ -37,6 +49,13 @@ public class MainViewModel extends BaseViewModel {
 
             @Override
             public void onNext(ArrayList<Student> students) {
+                SpUtil.putStudent(students);
+
+                String[] imgFileDir = new File(FaceManageActivity.REGISTER_DIR).list();
+                List<String> imgFiles = imgFileDir == null ? new ArrayList<>() : Arrays.asList(imgFileDir);
+
+                Log.i(TAG, "registerStatusPic imgFiles = " + imgFiles);
+
                 ArrayList<Student> subList = new ArrayList<>();
                 for (Student student : students) {
                     //去掉无效图片
@@ -49,14 +68,16 @@ public class MainViewModel extends BaseViewModel {
                     if ("/Pic/StuImg/moren.png".equals(student.getCPic())) {
                         continue;
                     }
-                    //先处理一年级数据
-                    if (student.getCStudCode().startsWith("24")) {
-                        student.setNfcId("3162735690");
-                        subList.add(student);
+                    //去掉重复图片
+                    if (imgFiles.contains(student.getCPic().replace("/Pic/StuImg/", ""))) {
+                        continue;
                     }
+                    subList.add(student);
                 }
-
-                SpUtil.putStudent(subList);
+                if (subList.isEmpty()) {
+                    tips.postValue("您的数据已为最新了！");
+                    return;
+                }
 
                 studentSize.setValue(subList.size());
 
@@ -66,8 +87,8 @@ public class MainViewModel extends BaseViewModel {
 
             @Override
             public void onError(Throwable e) {
-                tips.postValue("网络异常：" + e.getMessage());
-                studentFinish.postValue(true);
+                closeLoading.postValue(new Object());
+                tips.postValue("更新数据失败，网络异常：" + e.getMessage());
             }
 
             @Override
@@ -89,22 +110,35 @@ public class MainViewModel extends BaseViewModel {
 
             @Override
             public void onNext(ResponseBody responseBody) {
-                FileUtil.savePhoto(filePath, responseBody.byteStream());
+                boolean result = FileUtil.savePhoto(filePath, responseBody.byteStream());
+                if (!result) {
+                    Log.e(TAG, "savePhoto fail");
+                }
 
                 students.remove(0);
                 studentProgress.postValue(size - students.size());
 
-                if (!students.isEmpty()) {
-                    downLoadPhoto(students, size);
-                } else {
-                    studentFinish.postValue(true);
+                if (!students.isEmpty() && canDownload) {
+                    Observable.timer(300, TimeUnit.MILLISECONDS)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
+                            .blockingSubscribe(aLong -> downLoadPhoto(students, size));
                 }
             }
 
             @Override
             public void onError(Throwable e) {
-                tips.postValue("网络异常：" + e.getMessage());
-                studentFinish.postValue(true);
+                Log.e(TAG, "downloadPhoto fail message = " + e.getMessage());
+
+                students.remove(0);
+                studentProgress.postValue(size - students.size());
+
+                if (!students.isEmpty() || !canDownload) {
+                    Observable.timer(300, TimeUnit.MILLISECONDS)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
+                            .blockingSubscribe(aLong -> downLoadPhoto(students, size));
+                }
             }
 
             @Override
@@ -112,6 +146,87 @@ public class MainViewModel extends BaseViewModel {
 
             }
         });
+    }
+
+    public void syncStudentInfo() {
+        HttpUtil.getStudent(new Observer<>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(ArrayList<Student> students) {
+                closeLoading.postValue(new Object());
+                SpUtil.putStudent(students);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                closeLoading.postValue(new Object());
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    public void syncStudentNfc() {
+        HttpUtil.getNfc(new Observer<>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(ArrayList<Nfc> nfcs) {
+                SpUtil.setStudentNfc(nfcs);
+                syncStudentSports();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                syncStudentSports();
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    public void syncStudentSports() {
+        HttpUtil.getStudentSports(new Observer<>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(ArrayList<StudentSports> studentSports) {
+                closeLoading.postValue(new Object());
+                SpUtil.putStudentSports(studentSports);
+                syncFinish.postValue(new Object());
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                closeLoading.postValue(new Object());
+                syncFinish.postValue(new Object());
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    public synchronized void cancelDownload() {
+        canDownload = false;
     }
 
     public MutableLiveData<Integer> getStudentSize() {
@@ -122,7 +237,7 @@ public class MainViewModel extends BaseViewModel {
         return studentProgress;
     }
 
-    public MutableLiveData<Boolean> getStudentFinish() {
-        return studentFinish;
+    public MutableLiveData<Object> getSyncFinish() {
+        return syncFinish;
     }
 }

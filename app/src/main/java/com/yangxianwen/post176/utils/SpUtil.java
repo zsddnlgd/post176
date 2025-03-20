@@ -2,25 +2,97 @@ package com.yangxianwen.post176.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.gson.reflect.TypeToken;
 import com.yangxianwen.post176.App;
+import com.yangxianwen.post176.bean.Meal;
+import com.yangxianwen.post176.bean.Nfc;
+import com.yangxianwen.post176.bean.Order;
 import com.yangxianwen.post176.bean.Student;
+import com.yangxianwen.post176.bean.StudentSports;
+import com.yangxianwen.post176.values.Urls;
 
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class SpUtil {
 
+    private static final String device = "DeviceInfo";
+    private static final String deviceNumberKey = "deviceId";
+    private static final String ipAddressKey = "ipAddress";
+    private static final String order = "OrderInfo";
+    private static final String orderKey = "failOrder";
+    private static final String student = "StudentInfo";
     private static final String studentKey = "studentList";
+    private static final String studentSportsKey = "studentSportsList";
+    private static final String meal = "MealInfo";
+    private static final String mealKey = "mealList";
+
+    public static void putDeviceNumber(String value) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        sp.edit().putString(deviceNumberKey, value).apply();
+    }
+
+    public static String getDeviceNumber() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        return sp.getString(deviceNumberKey, "11");
+    }
+
+    public static void putIpAddress(String value) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        sp.edit().putString(ipAddressKey, value).apply();
+    }
+
+    public static String getIpAddress() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        return sp.getString(ipAddressKey, Urls.main);
+    }
+
+    public static void putStudentSports(ArrayList<StudentSports> sports) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(student, Context.MODE_PRIVATE);
+        sp.edit().putString(studentSportsKey, GsonUtil.objToJson(sports)).apply();
+    }
+
+    public static StudentSports getStudentSportsByCode(String key, int type) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(student, Context.MODE_PRIVATE);
+        String json = sp.getString(studentSportsKey, null);
+        if (json == null) {
+            return null;
+        }
+        ArrayList<StudentSports> sports = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<StudentSports>>() {
+        }.getType());
+        for (StudentSports sport : sports) {
+            if (Objects.equals(sport.getCStudCode(), key) ) {
+                return sport;
+            }
+        }
+        return null;
+    }
+
+    public static StudentSports getStudentSportsByCode(String key) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(student, Context.MODE_PRIVATE);
+        String json = sp.getString(studentSportsKey, null);
+        if (json == null) {
+            return null;
+        }
+        ArrayList<StudentSports> sports = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<StudentSports>>() {
+        }.getType());
+        for (StudentSports sport : sports) {
+            if (Objects.equals(sport.getCStudCode(), key) ) {
+                return sport;
+            }
+        }
+        return null;
+    }
 
     public static void putStudent(ArrayList<Student> students) {
-        SharedPreferences sp = App.getIns().getSharedPreferences("StudentInfo", Context.MODE_PRIVATE);
+        SharedPreferences sp = App.getIns().getSharedPreferences(student, Context.MODE_PRIVATE);
         sp.edit().putString(studentKey, GsonUtil.objToJson(students)).apply();
     }
 
     public static Student getStudentByPic(String key) {
-        SharedPreferences sp = App.getIns().getSharedPreferences("StudentInfo", Context.MODE_PRIVATE);
+        SharedPreferences sp = App.getIns().getSharedPreferences(student, Context.MODE_PRIVATE);
         String json = sp.getString(studentKey, null);
         if (json == null) {
             return null;
@@ -49,5 +121,102 @@ public class SpUtil {
             }
         }
         return null;
+    }
+
+    public static void setStudentNfc(Student student) {
+        if (student == null) {
+            return;
+        }
+        SharedPreferences sp = App.getIns().getSharedPreferences("StudentInfo", Context.MODE_PRIVATE);
+        String json = sp.getString(studentKey, null);
+        if (json == null) {
+            return;
+        }
+        ArrayList<Student> students = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Student>>() {
+        }.getType());
+        for (Student tempStudent : students) {
+            if (Objects.equals(student.getCStudCode(), tempStudent.getCStudCode())) {
+                tempStudent.setNfcId(student.getNfcId());
+                break;
+            }
+        }
+        putStudent(students);
+    }
+
+    public static void setStudentNfc(ArrayList<Nfc> nfcs) {
+        if (nfcs == null) {
+            return;
+        }
+        SharedPreferences sp = App.getIns().getSharedPreferences("StudentInfo", Context.MODE_PRIVATE);
+        String json = sp.getString(studentKey, null);
+        if (json == null) {
+            return;
+        }
+        ArrayList<Student> students = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Student>>() {
+        }.getType());
+        for (Student tempStudent : students) {
+            for (Nfc nfc : nfcs) {
+                if (Objects.equals(nfc.getCStudCode(), tempStudent.getCStudCode())) {
+                    tempStudent.setNfcId(nfc.getNfcId());
+                    break;
+                }
+            }
+        }
+        putStudent(students);
+    }
+
+    public static void setStudentBalance(Student student) {
+        if (student == null) {
+            return;
+        }
+        SharedPreferences sp = App.getIns().getSharedPreferences("StudentInfo", Context.MODE_PRIVATE);
+        String json = sp.getString(studentKey, null);
+        if (json == null) {
+            return;
+        }
+        ArrayList<Student> students = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Student>>() {
+        }.getType());
+        for (Student tempStudent : students) {
+            if (Objects.equals(student.getCStudCode(), tempStudent.getCStudCode())) {
+                tempStudent.setNBalance(student.getNBalance());
+                break;
+            }
+        }
+        putStudent(students);
+    }
+
+    public static void putMeal(ArrayList<Meal> meals) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(meal, Context.MODE_PRIVATE);
+        sp.edit().putString(mealKey, GsonUtil.objToJson(meals)).apply();
+    }
+
+    public static ArrayList<Meal> getMeal() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(meal, Context.MODE_PRIVATE);
+        String json = sp.getString(mealKey, null);
+        if (json == null) {
+            return null;
+        }
+        return GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Meal>>() {
+        }.getType());
+    }
+
+    public static void putFailOrders(ArrayList<Order> orders) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
+        sp.edit().putString(orderKey, GsonUtil.getGson().toJson(orders)).apply();
+    }
+
+    public static ArrayList<Order> getFailOrders() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
+        String json = sp.getString(orderKey, null);
+        if (json == null) {
+            return null;
+        }
+        return GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Order>>() {
+        }.getType());
+    }
+
+    public static void clearFailOrders() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
+        sp.edit().clear().apply();
     }
 }

@@ -18,11 +18,13 @@ import com.arcsoft.imageutil.ArcSoftImageUtilError;
 import com.yangxianwen.post176.R;
 import com.yangxianwen.post176.base.BaseActivity;
 import com.yangxianwen.post176.face.faceserver.FaceServer;
-import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.widget.ProgressDialog;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,12 +53,10 @@ public class FaceManageActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_face_manage);
 
-        FileUtil.createPath(REGISTER_DIR);
-        FileUtil.createPath(REGISTER_FAILED_DIR);
-
         executorService = Executors.newSingleThreadExecutor();
         tvNotificationRegisterResult = findViewById(R.id.notification_register_result);
         progressDialog = new ProgressDialog(this, ProgressDialog.update);
+        progressDialog.setCancelable(false);
         progressDialog.setTitleText("注册中，请稍候...");
         progressDialog.setContentText("正在获取进度...");
         FaceServer.getInstance().init(this);
@@ -93,10 +93,12 @@ public class FaceManageActivity extends BaseActivity {
             showToast(getString(R.string.batch_process_path_is_not_dir, REGISTER_DIR));
             return;
         }
+        String[] imgFileDir = new File(getFilesDir().getAbsolutePath() + File.separator + FaceServer.SAVE_IMG_DIR).list();
+        List<String> imgFiles = imgFileDir == null ? new ArrayList<>() : Arrays.asList(imgFileDir);
         final File[] jpgFiles = dir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return name.endsWith(FaceServer.IMG_SUFFIX);
+                return !imgFiles.contains(name) && name.endsWith(FaceServer.IMG_SUFFIX);
             }
         });
         executorService.execute(new Runnable() {
@@ -186,6 +188,11 @@ public class FaceManageActivity extends BaseActivity {
                 showToast(getString(R.string.permission_denied));
             }
         }
+    }
+
+    @Override
+    public boolean needHideNavigationBar() {
+        return true;
     }
 
     public void clearFaces(View view) {

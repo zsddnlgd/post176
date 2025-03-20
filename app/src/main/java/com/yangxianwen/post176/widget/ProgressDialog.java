@@ -81,4 +81,10 @@ public class ProgressDialog extends AlertDialog {
             dismiss();
         }
     }
+
+    public void setProgress(int progress) {
+        if (progressBar != null) {
+            progressBar.setProgress(progress);
+        }
+    }
 }

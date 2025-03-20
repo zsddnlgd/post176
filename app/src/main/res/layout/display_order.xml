@@ -16,7 +16,7 @@
         tools:context=".OrderActivity">
 
         <LinearLayout
-            android:layout_width="280dp"
+            android:layout_width="240dp"
             android:layout_height="match_parent"
             android:background="@color/color_main"
             android:orientation="vertical">
@@ -32,9 +32,9 @@
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
-            <com.yangxianwen.post176.face.FaceLayout
+            <com.yangxianwen.post176.face.FaceLayoutNew
                 android:id="@+id/face"
-                android:layout_width="185dp"
+                android:layout_width="180dp"
                 android:layout_height="200dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
@@ -42,12 +42,29 @@
                 app:layout_constraintTop_toTopOf="parent">
 
                 <TextureView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:id="@+id/face_preview"
+                    android:layout_width="100dp"
+                    android:layout_height="120dp"
+                    android:layout_gravity="center" />
 
                 <com.yangxianwen.post176.face.widget.FaceRectView
+                    android:id="@+id/face_identify"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+
+                <com.yangxianwen.post176.face.widget.GuideView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone">
+
+                    <View
+                        android:layout_width="100dp"
+                        android:layout_height="120dp"
+                        android:layout_gravity="center" />
+
+                </com.yangxianwen.post176.face.widget.GuideView>
 
                 <ImageView
                     android:id="@+id/face_icon"
@@ -55,7 +72,7 @@
                     android:layout_height="match_parent"
                     android:scaleType="fitXY" />
 
-            </com.yangxianwen.post176.face.FaceLayout>
+            </com.yangxianwen.post176.face.FaceLayoutNew>
 
             <TextView
                 android:id="@+id/cStudName"
@@ -147,7 +164,7 @@
             <LinearLayout
                 android:id="@+id/staple_food_container_1"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:divider="@drawable/bg_snap"
@@ -159,7 +176,7 @@
             <LinearLayout
                 android:id="@+id/staple_food_container_2"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:divider="@drawable/bg_snap"
@@ -171,7 +188,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
@@ -186,7 +203,7 @@
             <LinearLayout
                 android:id="@+id/side_dish_container_1"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:divider="@drawable/bg_snap"
@@ -198,7 +215,7 @@
             <LinearLayout
                 android:id="@+id/side_dish_container_2"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:divider="@drawable/bg_snap"
@@ -210,7 +227,7 @@
             <LinearLayout
                 android:id="@+id/side_dish_container_3"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:divider="@drawable/bg_snap"
@@ -222,7 +239,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
@@ -237,7 +254,7 @@
             <LinearLayout
                 android:id="@+id/special_meal_container"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:divider="@drawable/bg_snap"
@@ -249,7 +266,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
@@ -264,7 +281,7 @@
             <LinearLayout
                 android:id="@+id/special_dish_soup_container"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
                 android:divider="@drawable/bg_snap"
@@ -283,7 +300,7 @@
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
                     android:layout_marginStart="100dp"
-                    android:text="总金额：0.0元"
+                    android:text="总金额：0.00元"
                     android:textColor="@color/color_main"
                     android:textSize="30sp" />
 

@@ -11,6 +11,7 @@ public class BaseViewModel extends AndroidViewModel implements IBaseViewModel {
     protected final String TAG = getClass().getName();
 
     protected final MutableLiveData<String> tips = new MutableLiveData<>();
+    protected final MutableLiveData<Object> closeLoading = new MutableLiveData<>();
 
     public BaseViewModel(@NonNull Application application) {
         super(application);
@@ -53,5 +54,9 @@ public class BaseViewModel extends AndroidViewModel implements IBaseViewModel {
 
     public MutableLiveData<String> getTips() {
         return tips;
+    }
+
+    public MutableLiveData<Object> getCloseLoading() {
+        return closeLoading;
     }
 }

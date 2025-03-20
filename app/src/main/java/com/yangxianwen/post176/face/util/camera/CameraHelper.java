@@ -2,6 +2,7 @@ package com.yangxianwen.post176.face.util.camera;
 
 import android.graphics.ImageFormat;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.util.Log;
@@ -23,6 +24,7 @@ public class CameraHelper implements Camera.PreviewCallback {
     private static final String TAG = "CameraHelper";
     private Camera mCamera;
     private int mCameraId;
+    private Rect mScanRect;
     private Point previewViewSize;
     private View previewDisplayView;
     private Camera.Size previewSize;
@@ -262,6 +264,76 @@ public class CameraHelper implements Camera.PreviewCallback {
     @Override
     public void onPreviewFrame(byte[] nv21, Camera camera) {
         if (cameraListener != null) {
+//            Camera.Size size = camera.getParameters().getPreviewSize();
+//            int width = size.width;
+//            int height = size.height;
+
+            int width = 360;
+            int height = 400;
+
+/*            int cropWidth = mScanRect.width();
+            int cropHeight = mScanRect.height();
+            byte[] cropped = new byte[cropWidth * cropHeight * 3 / 2]; // YUV 420 格式
+
+            // 拷贝 Y 分量
+            for (int y = 0; y < cropHeight; y++) {
+                System.arraycopy(nv21, (mScanRect.top + y) * previewWidth + mScanRect.left,
+                        cropped, y * cropWidth, cropWidth);
+            }
+
+            // 拷贝 UV 分量（NV21 格式）
+            int uvOffset = previewWidth * previewHeight;
+            int uvCropOffset = cropWidth * cropHeight;
+            for (int y = 0; y < cropHeight / 2; y++) {
+                System.arraycopy(nv21, uvOffset + (mScanRect.top / 2 + y) * previewWidth + mScanRect.left,
+                        cropped, uvCropOffset + y * cropWidth, cropWidth);
+            }*/
+
+/*            // 计算裁剪后的宽高
+            int croppedWidth = mScanRect.width();
+            int croppedHeight = mScanRect.height();
+
+            // 初始化输出数组
+            byte[] output = new byte[croppedWidth * croppedHeight * 3 / 2];
+
+            // 裁剪Y分量
+            for (int i = 0; i < croppedHeight; ++i) {
+                System.arraycopy(nv21, (i + mScanRect.top) * previewWidth + mScanRect.left,
+                        output, i * croppedWidth, croppedWidth);
+            }
+
+            // 裁剪U和V分量
+            int uvSrcOffset = previewWidth * previewHeight;
+            int uvDestOffset = croppedWidth * croppedHeight;
+            for (int i = 0; i < croppedHeight / 2; ++i) {
+                System.arraycopy(nv21, uvSrcOffset + (i + mScanRect.top / 2) * previewWidth + mScanRect.left,
+                        output, uvDestOffset + i * croppedWidth, croppedWidth);
+            }*/
+
+            int croppedWidth = mScanRect.width();
+            int croppedHeight = mScanRect.height();
+
+            Log.i(TAG, "onPreviewFrame1 : " + width + "  " + height);
+            Log.i(TAG, "onPreviewFrame2 : " + croppedWidth + "  " + croppedHeight);
+
+            byte[] croppedNV21 = new byte[croppedWidth * croppedHeight * 3 / 2];
+
+            // Copy Y component
+            for (int y = mScanRect.top; y < mScanRect.bottom; y++) {
+                System.arraycopy(nv21, y * width + mScanRect.left, croppedNV21, (y - mScanRect.top) * croppedWidth, croppedWidth);
+            }
+
+            // Calculate UV offsets
+            int uvRowStride = (width + 1) / 2;
+            int uvSrcOffset = height * width + ((mScanRect.top / 2) * uvRowStride + (mScanRect.left / 2)) * 2;
+            int uvCroppedWidth = (croppedWidth + 1) / 2;
+
+            // Copy UV component
+            for (int y = mScanRect.top / 2; y < mScanRect.bottom / 2; y++) {
+                System.arraycopy(nv21, uvSrcOffset + (y - mScanRect.top / 2) * uvRowStride * 2, croppedNV21,
+                        croppedHeight * croppedWidth + (y - mScanRect.top / 2) * uvCroppedWidth * 2, uvCroppedWidth * 2);
+            }
+
             cameraListener.onPreview(nv21, camera);
         }
     }
@@ -269,9 +341,10 @@ public class CameraHelper implements Camera.PreviewCallback {
     private TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-//            start();
+
             if (mCamera != null) {
                 try {
+                    mScanRect = new Rect(40 * 2, 40 * 2, (40 + 100) * 2, (40 + 120) * 2);
                     mCamera.setPreviewTexture(surfaceTexture);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -329,6 +402,7 @@ public class CameraHelper implements Camera.PreviewCallback {
             }
         }
     }
+
     public boolean switchCamera() {
         if (Camera.getNumberOfCameras() < 2) {
             return false;

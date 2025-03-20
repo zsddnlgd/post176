@@ -3,7 +3,6 @@ package com.yangxianwen.post176.face;
 import android.content.Context;
 import android.graphics.Point;
 import android.hardware.Camera;
-import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -13,27 +12,22 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.arcsoft.face.AgeInfo;
 import com.arcsoft.face.ErrorInfo;
 import com.arcsoft.face.FaceEngine;
 import com.arcsoft.face.FaceFeature;
-import com.arcsoft.face.GenderInfo;
 import com.arcsoft.face.LivenessInfo;
 import com.arcsoft.face.enums.DetectFaceOrientPriority;
 import com.arcsoft.face.enums.DetectMode;
 import com.yangxianwen.post176.R;
 import com.yangxianwen.post176.face.faceserver.CompareResult;
 import com.yangxianwen.post176.face.faceserver.FaceServer;
-import com.yangxianwen.post176.face.model.DrawInfo;
 import com.yangxianwen.post176.face.model.FacePreviewInfo;
 import com.yangxianwen.post176.face.util.ConfigUtil;
-import com.yangxianwen.post176.face.util.DrawHelper;
 import com.yangxianwen.post176.face.util.camera.CameraHelper;
 import com.yangxianwen.post176.face.util.camera.CameraListener;
 import com.yangxianwen.post176.face.util.face.FaceHelper;
 import com.yangxianwen.post176.face.util.face.FaceListener;
 import com.yangxianwen.post176.face.util.face.LivenessType;
-import com.yangxianwen.post176.face.util.face.RecognizeColor;
 import com.yangxianwen.post176.face.util.face.RequestFeatureStatus;
 import com.yangxianwen.post176.face.util.face.RequestLivenessStatus;
 import com.yangxianwen.post176.face.widget.FaceRectView;
@@ -46,9 +40,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -58,7 +49,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class FaceLayout extends FrameLayout {
+public class FaceLayoutNew extends FrameLayout {
 
     private OnRecognizeResultListener mRecognizeResultListener;
 
@@ -66,7 +57,7 @@ public class FaceLayout extends FrameLayout {
         mRecognizeResultListener = recognizeResultListener;
     }
 
-    private static final String TAG = "FaceLayout";
+    private static final String TAG = "FaceLayoutNew";
     private static final int MAX_DETECT_NUM = 1;
     /**
      * 当FR成功，活体未成功时，FR等待活体的时间
@@ -82,7 +73,6 @@ public class FaceLayout extends FrameLayout {
     private static final int MAX_RETRY_TIME = 3;
 
     private CameraHelper cameraHelper;
-    private DrawHelper drawHelper;
     private Camera.Size previewSize;
     /**
      * 优先打开的摄像头，本界面主要用于单目RGB摄像头设备，因此默认打开前置
@@ -158,15 +148,15 @@ public class FaceLayout extends FrameLayout {
      */
     private static final float SIMILAR_THRESHOLD = 0.8F;
 
-    public FaceLayout(@NonNull Context context) {
+    public FaceLayoutNew(@NonNull Context context) {
         this(context, null);
     }
 
-    public FaceLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public FaceLayoutNew(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public FaceLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public FaceLayoutNew(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         //本地人脸库初始化
         FaceServer.getInstance().init(context);
@@ -180,7 +170,6 @@ public class FaceLayout extends FrameLayout {
 
     private void initView() {
         previewView = findViewById(R.id.face_preview);
-        faceRectView = findViewById(R.id.face_identify);
     }
 
     /**
@@ -383,8 +372,6 @@ public class FaceLayout extends FrameLayout {
             public void onCameraOpened(Camera camera, int cameraId, int displayOrientation, boolean isMirror) {
                 Camera.Size lastPreviewSize = previewSize;
                 previewSize = camera.getParameters().getPreviewSize();
-                drawHelper = new DrawHelper(previewSize.width, previewSize.height, previewView.getWidth(), previewView.getHeight(), displayOrientation, cameraId, isMirror, false, false);
-                Log.i(TAG, "onCameraOpened: " + drawHelper.toString());
                 // 切换相机的时候可能会导致预览尺寸发生变化
                 if (faceHelper == null || lastPreviewSize == null || lastPreviewSize.width != previewSize.width || lastPreviewSize.height != previewSize.height) {
                     Integer trackedFaceCount = null;
@@ -404,9 +391,6 @@ public class FaceLayout extends FrameLayout {
                     faceRectView.clearFaceInfo();
                 }
                 List<FacePreviewInfo> facePreviewInfoList = faceHelper.onPreviewFrame(nv21);
-                if (facePreviewInfoList != null && faceRectView != null && drawHelper != null) {
-                    drawPreviewInfo(facePreviewInfoList);
-                }
                 registerFace(nv21, facePreviewInfoList);
                 clearLeftFace(facePreviewInfoList);
 
@@ -448,9 +432,6 @@ public class FaceLayout extends FrameLayout {
 
             @Override
             public void onCameraConfigurationChanged(int cameraID, int displayOrientation) {
-                if (drawHelper != null) {
-                    drawHelper.setCameraDisplayOrientation(displayOrientation);
-                }
                 Log.i(TAG, "onCameraConfigurationChanged: " + cameraID + "  " + displayOrientation);
             }
         };
@@ -496,44 +477,6 @@ public class FaceLayout extends FrameLayout {
             });
         }
     }
-
-    private void drawPreviewInfo(List<FacePreviewInfo> facePreviewInfoList) {
-        List<DrawInfo> drawInfoList = new ArrayList<>();
-        for (int i = 0; i < facePreviewInfoList.size(); i++) {
-            String name = faceHelper.getName(facePreviewInfoList.get(i).getTrackId());
-            Integer liveness = livenessMap.get(facePreviewInfoList.get(i).getTrackId());
-            Integer recognizeStatus = requestFeatureStatusMap.get(facePreviewInfoList.get(i).getTrackId());
-
-            // 根据识别结果和活体结果设置颜色
-            int color = RecognizeColor.COLOR_UNKNOWN;
-            if (recognizeStatus != null) {
-                if (recognizeStatus == RequestFeatureStatus.FAILED) {
-                    color = RecognizeColor.COLOR_FAILED;
-                }
-                if (recognizeStatus == RequestFeatureStatus.SUCCEED) {
-                    color = RecognizeColor.COLOR_SUCCESS;
-                }
-            }
-            if (liveness != null && liveness == LivenessInfo.NOT_ALIVE) {
-                color = RecognizeColor.COLOR_FAILED;
-            }
-
-            drawInfoList.add(new DrawInfo(drawHelper.adjustRect(facePreviewInfoList.get(i).getFaceInfo().getRect()), GenderInfo.UNKNOWN, AgeInfo.UNKNOWN_AGE, liveness == null ? LivenessInfo.UNKNOWN : liveness, color, name == null ? String.valueOf(facePreviewInfoList.get(i).getTrackId()) : name));
-        }
-        drawHelper.draw(faceRectView, drawInfoList);
-    }
-
-    /*@Override
-    public void afterRequestPermission(int requestCode, boolean isAllGranted) {
-        if (requestCode == ACTION_REQUEST_PERMISSIONS) {
-            if (isAllGranted) {
-                initEngine();
-                initCamera();
-            } else {
-                showToast(getString(R.string.permission_denied));
-            }
-        }
-    }*/
 
     /**
      * 删除已经离开的人脸

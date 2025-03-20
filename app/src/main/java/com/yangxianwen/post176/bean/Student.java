@@ -70,7 +70,7 @@ public class Student {
         this.cPic = cPic;
     }
 
-    public Object getNReferenceValue() {
+    public double getNReferenceValue() {
         return nReferenceValue;
     }
 
@@ -78,7 +78,7 @@ public class Student {
         this.nReferenceValue = nReferenceValue;
     }
 
-    public Object getNfcId() {
+    public String getNfcId() {
         return nfcId;
     }
 
@@ -90,7 +90,7 @@ public class Student {
         return nBalance;
     }
 
-    public void setNBalance(int nBalance) {
+    public void setNBalance(double nBalance) {
         this.nBalance = nBalance;
     }
 }
