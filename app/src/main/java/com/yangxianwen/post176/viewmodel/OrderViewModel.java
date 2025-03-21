@@ -43,8 +43,8 @@ public class OrderViewModel extends BaseViewModel {
     private final MutableLiveData<ArrayList<Meal>> mealList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<Meal>> mealSelectList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<Meal>> mealEmptyList = new MutableLiveData<>(new ArrayList<>());
-
-    private double studentBalance;
+    private final MutableLiveData<Boolean> hasFailOrder = new MutableLiveData<>(false);
+    private double studentBalance = 0;
 
     public OrderViewModel(@NonNull Application application) {
         super(application);
@@ -88,9 +88,14 @@ public class OrderViewModel extends BaseViewModel {
 
                 ArrayList<Meal> subList = new ArrayList<>();
                 for (Meal meal : meals) {
-                    if (TimeUtil.inTime(meal.getCStartTime(), meal.getCEndTime())) {
+                    String start = meal.getCDate() + meal.getCStartTime();
+                    String end = meal.getCDate() + meal.getCEndTime();
+                    if (TimeUtil.inTime(start, end, "yyyyMMddHH:mm")) {
                         subList.add(meal);
                     }
+//                    if (TimeUtil.inTime(meal.getCStartTime(), meal.getCEndTime(), "HH:mm")) {
+//                        subList.add(meal);
+//                    }
                 }
                 if (subList.isEmpty()) {
                     tips.postValue("当前不在开餐时间");
@@ -112,9 +117,14 @@ public class OrderViewModel extends BaseViewModel {
 
                 ArrayList<Meal> subList = new ArrayList<>();
                 for (Meal meal : meals) {
-                    if (TimeUtil.inTime(meal.getCStartTime(), meal.getCEndTime())) {
+                    String start = meal.getCDate() + meal.getCStartTime();
+                    String end = meal.getCDate() + meal.getCEndTime();
+                    if (TimeUtil.inTime(start, end, "yyyy-MM-ddHH:mm")) {
                         subList.add(meal);
                     }
+//                    if (TimeUtil.inTime(meal.getCStartTime(), meal.getCEndTime(), "HH:mm")) {
+//                        subList.add(meal);
+//                    }
                 }
                 if (subList.isEmpty()) {
                     tips.postValue("当前不在开餐时间");
@@ -194,6 +204,7 @@ public class OrderViewModel extends BaseViewModel {
             public void onNext(Result result) {
                 closeLoading.setValue(new Object());
                 SpUtil.clearFailOrders();
+                hasFailOrder.postValue(false);
                 orderResult.postValue(new Object());
 
                 balance.postValue(String.format(Locale.getDefault(), "余额：%.1f", studentBalance));
@@ -206,6 +217,7 @@ public class OrderViewModel extends BaseViewModel {
             public void onError(Throwable e) {
                 closeLoading.setValue(new Object());
                 SpUtil.putFailOrders(orders);
+                hasFailOrder.postValue(true);
                 orderResult.postValue(new Object());
 
                 balance.postValue(String.format(Locale.getDefault(), "余额：%.1f", studentBalance));
@@ -226,6 +238,8 @@ public class OrderViewModel extends BaseViewModel {
             return;
         }
 
+        hasFailOrder.postValue(true);
+
         HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
         requestMap.put("requests", orders);
         String jsonRequest = GsonUtil.objToJson(requestMap);
@@ -242,6 +256,7 @@ public class OrderViewModel extends BaseViewModel {
             @Override
             public void onNext(Result result) {
                 SpUtil.clearFailOrders();
+                hasFailOrder.postValue(false);
             }
 
             @Override
@@ -257,13 +272,14 @@ public class OrderViewModel extends BaseViewModel {
     }
 
     @NonNull
-    private static ArrayList<Order> getOrderInfo(Student student, ArrayList<Meal> meals) {
+    private ArrayList<Order> getOrderInfo(Student student, ArrayList<Meal> meals) {
         ArrayList<Order> orders;
         ArrayList<Order> failOrders = SpUtil.getFailOrders();
-        if (failOrders == null) {
-            orders = new ArrayList<>();
-        } else {
+        if (failOrders != null && !failOrders.isEmpty()) {
             orders = new ArrayList<>(failOrders);
+            hasFailOrder.postValue(true);
+        } else {
+            orders = new ArrayList<>();
         }
         String[] times = TimeUtil.getStringTime();
         String billCode = times[0] + SpUtil.getDeviceNumber();
@@ -501,5 +517,9 @@ public class OrderViewModel extends BaseViewModel {
 
     public MutableLiveData<ArrayList<Meal>> getMealEmptyList() {
         return mealEmptyList;
+    }
+
+    public MutableLiveData<Boolean> getHasFailOrder() {
+        return hasFailOrder;
     }
 }

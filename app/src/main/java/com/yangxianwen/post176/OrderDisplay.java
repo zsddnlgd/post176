@@ -1,6 +1,5 @@
 package com.yangxianwen.post176;
 
-import android.app.Presentation;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.Display;
@@ -11,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.yangxianwen.post176.base.BaseMvvmPresentation;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.DisplayOrderBinding;
@@ -23,10 +23,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
-public class OrderDisplay extends Presentation {
-
-    private DisplayOrderBinding mBinding;
-    private OrderViewModel mViewModel;
+public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, DisplayOrderBinding> {
 
     protected LiveDataManager mLiveDataManager;
 
@@ -37,14 +34,17 @@ public class OrderDisplay extends Presentation {
     private final ArrayList<View> items = new ArrayList<>();
 
     public OrderDisplay(Context outerContext, Display display) {
-        super(outerContext, display, R.style.AppTheme);
+        super(outerContext, display);
+    }
+
+    @Override
+    protected int getLayoutId() {
+        return R.layout.display_order;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBinding = DisplayOrderBinding.inflate(getLayoutInflater());
-        setContentView(mBinding.getRoot());
 
         initObserveForever();
 
@@ -105,6 +105,17 @@ public class OrderDisplay extends Presentation {
                 return;
             }
             mBinding.iCalorie.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getHasFailOrder(), aBoolean -> {
+            if (aBoolean == null) {
+                return;
+            }
+            if (aBoolean) {
+                mBinding.failOrder.setVisibility(View.VISIBLE);
+            } else {
+                mBinding.failOrder.setVisibility(View.GONE);
+            }
         });
 
         mLiveDataManager.observeForever(mViewModel.getMealList(), meals -> {

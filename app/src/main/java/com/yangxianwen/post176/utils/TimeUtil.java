@@ -9,12 +9,12 @@ import java.util.Locale;
 public class TimeUtil {
 
 
-    public static boolean inTime(String start, String end) {
+    public static boolean inTime(String start, String end, String pattern) {
         if (start == null || end == null) {
             return false;
         }
 
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());
         String current = format.format(Calendar.getInstance().getTime());
         Date startData;
         Date endData;

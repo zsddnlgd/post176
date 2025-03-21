@@ -139,6 +139,17 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             mBinding.iCalorie.setText(s);
         });
 
+        mLiveDataManager.observeForever(mViewModel.getHasFailOrder(), aBoolean -> {
+            if (aBoolean == null) {
+                return;
+            }
+            if (aBoolean) {
+                mBinding.failOrder.setVisibility(View.VISIBLE);
+            } else {
+                mBinding.failOrder.setVisibility(View.GONE);
+            }
+        });
+
         mLiveDataManager.observeForever(mViewModel.getMealList(), meals -> {
             if (meals == null) {
                 return;
@@ -242,7 +253,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
         });
         mBinding.nextButton.setOnClickListener(v -> {
             //取消打餐
-            orderFinish();
+            orderDisplay.dismiss();
         });
     }
 
