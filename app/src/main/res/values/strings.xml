@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">176中学食堂点餐</string>
 
-    <string name="device_id_placeholder" translatable="false">本机编号：</string>
+    <string name="device_id_placeholder">本机编号：</string>
     <string name="download_from_server">从服务器下载</string>
     <string name="start_processing">开始处理</string>
     <string name="default_folder_pic">/Pictures</string>
@@ -29,7 +29,7 @@
     <string name="ip_address">IP地址</string>
     <string name="register_face">注册人脸</string>
     <string name="turnover">营业额</string>
-    <string name="run_out">告罄</string>
+    <string name="sell_out">售罄</string>
     <string name="permission_denied">权限被拒绝！</string>
     <string name="ok">确认</string>
     <string name="cancel">取消</string>

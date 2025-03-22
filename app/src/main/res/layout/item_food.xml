@@ -26,7 +26,7 @@
         android:layout_centerInParent="true"
         android:background="@drawable/bg_round"
         android:gravity="center"
-        android:text="@string/run_out"
+        android:text="@string/sell_out"
         android:textColor="@color/red"
         android:textSize="11sp"
         android:visibility="invisible"

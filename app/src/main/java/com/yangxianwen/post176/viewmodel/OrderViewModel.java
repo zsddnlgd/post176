@@ -75,7 +75,8 @@ public class OrderViewModel extends BaseViewModel {
         StudentSports sports = SpUtil.getStudentSportsByCode(student != null ? student.getCStudCode() : "");
         stepNumber.setValue(stepStr + (sports != null ? sports.getIStepNumber() : "0"));
         distance.setValue(distanceStr + (sports != null ? sports.getIDistance() : "0"));
-        calorie.postValue(calorieStr + (sports != null ? sports.getNCalorie() : "0.0"));
+        calorie.setValue(calorieStr + (sports != null ? sports.getNCalorie() : "0.0"));
+        orderStatus.setValue(OrderStatus.pick);
     }
 
     public void clearStatusInfo() {
@@ -86,6 +87,7 @@ public class OrderViewModel extends BaseViewModel {
         stepNumber.setValue(stepStr);
         distance.setValue(distanceStr);
         calorie.setValue(calorieStr);
+        orderStatus.setValue(OrderStatus.identify);
     }
 
     public void getMeal() {
@@ -489,6 +491,10 @@ public class OrderViewModel extends BaseViewModel {
             return 2;
         }
         return -1;
+    }
+
+    public boolean canPick() {
+        return orderStatus.getValue() == OrderStatus.pick;
     }
 
     public MutableLiveData<OrderStatus> getOrderStatus() {

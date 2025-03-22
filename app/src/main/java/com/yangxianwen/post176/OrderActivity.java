@@ -287,6 +287,10 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         item.setSelected(false);
         item.setTag(meal);
         item.setOnClickListener(v -> {
+            if (!mViewModel.canPick()) {
+                return;
+            }
+
             View selectView = v.findViewById(R.id.food_select);
             if (mViewModel.containsMealSelect(meal)) {
                 selectView.setVisibility(View.GONE);

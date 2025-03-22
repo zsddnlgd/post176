@@ -16,7 +16,6 @@ import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.ActivityOrderBinding;
 import com.yangxianwen.post176.manager.LiveDataManager;
 import com.yangxianwen.post176.utils.FileUtil;
-import com.yangxianwen.post176.values.Constants;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
 
 import java.io.File;
