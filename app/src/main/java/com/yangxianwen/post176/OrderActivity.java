@@ -48,7 +48,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
 
         initObserveForever();
 
-        initFace();
+        initFaceRecognize();
 
         initBarcodeScanner();
 
@@ -60,8 +60,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mBinding.face.destroy();
-        mBarcodeScannerResolver.removeScanSuccessListener();
+        destroyFaceRecognize();
+        destroyBarcodeScanner();
     }
 
     @Override
@@ -207,8 +207,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         });
     }
 
-    private void initFace() {
-        mBinding.face.init();
+    private void initFaceRecognize() {
+        mBinding.face.initView();
         mBinding.face.setRecognizeResultListener(result -> {
             if (result == null) {
                 return;
@@ -216,6 +216,11 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             Student student = SpUtil.getStudentByPic(String.format("/Pic/StuImg/%s.jpg", result.getUserName()));
             showStudentInfo(student);
         });
+    }
+
+    private void destroyFaceRecognize() {
+        mBinding.face.destroyView();
+        mBinding.face.removeRecognizeResultListener();
     }
 
     private void initBarcodeScanner() {
@@ -233,6 +238,11 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
                 mViewModel.bindRfid(barcode, currentStudent);
             }
         });
+    }
+
+    private void destroyBarcodeScanner() {
+        mBarcodeScannerResolver.removeScanSuccessListener();
+        mBarcodeScannerResolver = null;
     }
 
     private void initListener() {
@@ -392,7 +402,6 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
 
         String filePath = student.getCPic().replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
         Glide.with(getActivity()).load(new File(filePath)).into(mBinding.faceIcon);
-        mBinding.face.stop();
 
         mViewModel.setStatusInfo(student);
 

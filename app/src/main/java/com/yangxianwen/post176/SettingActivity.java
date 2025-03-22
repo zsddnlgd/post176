@@ -20,16 +20,24 @@ public class SettingActivity extends BaseMvvmActivity<SettingViewModel, Activity
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBinding.deviceNumber.setText(SpUtil.getDeviceNumber());
+        mBinding.deviceNumber.setText(String.valueOf(SpUtil.getDeviceNumber()));
         mBinding.ipAddress.setText(SpUtil.getIpAddress());
+        mBinding.livenessDetect.setChecked(SpUtil.getLivenessDetect());
 
         mBinding.cancelButton.setOnClickListener(v -> finish());
         mBinding.confirmButton.setOnClickListener(v -> {
-            SpUtil.putDeviceNumber(mBinding.deviceNumber.getText().toString());
+            int number;
+            try {
+                number = Integer.parseInt(mBinding.deviceNumber.getText().toString());
+            } catch (NumberFormatException ignored) {
+                showToast("本机编号必须为数字格式！");
+                return;
+            }
+            SpUtil.putDeviceNumber(number);
             SpUtil.putIpAddress(mBinding.ipAddress.getText().toString());
+            SpUtil.putLivenessDetect(mBinding.livenessDetect.isChecked());
             finish();
         });
-
     }
 
     @Override

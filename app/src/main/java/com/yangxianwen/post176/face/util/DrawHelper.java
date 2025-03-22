@@ -190,41 +190,41 @@ public class DrawHelper {
         Path mPath = new Path();
         // 左上
         Rect rect = drawInfo.getRect();
-        mPath.moveTo(rect.left, rect.top + rect.height() / 4);
+        mPath.moveTo(rect.left, rect.top + rect.height() / 4f);
         mPath.lineTo(rect.left, rect.top);
-        mPath.lineTo(rect.left + rect.width() / 4, rect.top);
+        mPath.lineTo(rect.left + rect.width() / 4f, rect.top);
         // 右上
-        mPath.moveTo(rect.right - rect.width() / 4, rect.top);
+        mPath.moveTo(rect.right - rect.width() / 4f, rect.top);
         mPath.lineTo(rect.right, rect.top);
-        mPath.lineTo(rect.right, rect.top + rect.height() / 4);
+        mPath.lineTo(rect.right, rect.top + rect.height() / 4f);
         // 右下
-        mPath.moveTo(rect.right, rect.bottom - rect.height() / 4);
+        mPath.moveTo(rect.right, rect.bottom - rect.height() / 4f);
         mPath.lineTo(rect.right, rect.bottom);
-        mPath.lineTo(rect.right - rect.width() / 4, rect.bottom);
+        mPath.lineTo(rect.right - rect.width() / 4f, rect.bottom);
         // 左下
-        mPath.moveTo(rect.left + rect.width() / 4, rect.bottom);
+        mPath.moveTo(rect.left + rect.width() / 4f, rect.bottom);
         mPath.lineTo(rect.left, rect.bottom);
-        mPath.lineTo(rect.left, rect.bottom - rect.height() / 4);
+        mPath.lineTo(rect.left, rect.bottom - rect.height() / 4f);
         canvas.drawPath(mPath, paint);
 
         // 绘制文字，用最细的即可，避免在某些低像素设备上文字模糊
-        paint.setStrokeWidth(1);
-
-        if (drawInfo.getName() == null) {
-            paint.setStyle(Paint.Style.FILL_AND_STROKE);
-            paint.setTextSize(rect.width() / 8);
-
-            String str = (drawInfo.getSex() == GenderInfo.MALE ? "MALE" : (drawInfo.getSex() == GenderInfo.FEMALE ? "FEMALE" : "UNKNOWN"))
-                    + ","
-                    + (drawInfo.getAge() == AgeInfo.UNKNOWN_AGE ? "UNKNOWN" : drawInfo.getAge())
-                    + ","
-                    + (drawInfo.getLiveness() == LivenessInfo.ALIVE ? "ALIVE" : (drawInfo.getLiveness() == LivenessInfo.NOT_ALIVE ? "NOT_ALIVE" : "UNKNOWN"));
-            canvas.drawText(str, rect.left, rect.top - 10, paint);
-        } else {
-            paint.setStyle(Paint.Style.FILL_AND_STROKE);
-            paint.setTextSize(rect.width() / 8);
-            canvas.drawText(drawInfo.getName(), rect.left, rect.top - 10, paint);
-        }
+//        paint.setStrokeWidth(1);
+//
+//        if (drawInfo.getName() == null) {
+//            paint.setStyle(Paint.Style.FILL_AND_STROKE);
+//            paint.setTextSize(rect.width() / 8);
+//
+//            String str = (drawInfo.getSex() == GenderInfo.MALE ? "MALE" : (drawInfo.getSex() == GenderInfo.FEMALE ? "FEMALE" : "UNKNOWN"))
+//                    + ","
+//                    + (drawInfo.getAge() == AgeInfo.UNKNOWN_AGE ? "UNKNOWN" : drawInfo.getAge())
+//                    + ","
+//                    + (drawInfo.getLiveness() == LivenessInfo.ALIVE ? "ALIVE" : (drawInfo.getLiveness() == LivenessInfo.NOT_ALIVE ? "NOT_ALIVE" : "UNKNOWN"));
+//            canvas.drawText(str, rect.left, rect.top - 10, paint);
+//        } else {
+//            paint.setStyle(Paint.Style.FILL_AND_STROKE);
+//            paint.setTextSize(rect.width() / 8);
+//            canvas.drawText(drawInfo.getName(), rect.left, rect.top - 10, paint);
+//        }
     }
 
     public void setPreviewWidth(int previewWidth) {

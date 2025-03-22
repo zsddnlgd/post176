@@ -11,6 +11,7 @@ import com.yangxianwen.post176.base.BaseMvvmActivity;
 import com.yangxianwen.post176.bean.Turnover;
 import com.yangxianwen.post176.databinding.ActivityMainBinding;
 import com.yangxianwen.post176.face.FaceManageActivity;
+import com.yangxianwen.post176.service.UploadFailOrderService;
 import com.yangxianwen.post176.utils.ActiveUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.MainViewModel;
@@ -67,6 +68,11 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBi
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
     public boolean needHideNavigationBar() {
         return true;
     }
@@ -104,6 +110,14 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBi
         } else {
             ActivityCompat.requestPermissions(this, NEEDED_PERMISSIONS, ACTION_REQUEST_PERMISSIONS);
         }
+    }
+
+    private void startService() {
+        startService(new Intent(this, UploadFailOrderService.class));
+    }
+
+    private void stopService() {
+        stopService(new Intent(this, UploadFailOrderService.class));
     }
 
     private void syncStudentInfo() {

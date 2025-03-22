@@ -13,24 +13,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="5dp"
         android:gravity="center"
         android:textColor="@color/black"
         android:textSize="16sp"
         tools:text="麻辣鸡丝" />
-
-    <TextView
-        android:id="@+id/food_empty"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_centerInParent="true"
-        android:background="@drawable/bg_round"
-        android:gravity="center"
-        android:text="@string/sell_out"
-        android:textColor="@color/red"
-        android:textSize="11sp"
-        android:visibility="invisible"
-        tools:visibility="visible" />
 
     <TextView
         android:id="@+id/food_price"
@@ -44,13 +31,26 @@
         android:textSize="16sp"
         tools:text="12元" />
 
+    <TextView
+        android:textStyle="bold"
+        android:id="@+id/food_empty"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/bg_round"
+        android:gravity="center"
+        android:text="@string/sell_out"
+        android:textColor="@color/red"
+        android:textSize="11sp"
+        android:visibility="invisible"
+        tools:visibility="visible" />
+
     <ImageView
         android:id="@+id/food_select"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_alignParentEnd="true"
         android:layout_centerInParent="true"
-        android:layout_marginEnd="5dp"
         android:background="@drawable/ic_select"
         android:visibility="invisible"
         tools:visibility="visible" />

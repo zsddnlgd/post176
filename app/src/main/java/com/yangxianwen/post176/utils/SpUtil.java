@@ -14,6 +14,7 @@ import com.yangxianwen.post176.bean.Turnover;
 import com.yangxianwen.post176.values.Urls;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class SpUtil {
@@ -21,8 +22,9 @@ public class SpUtil {
     private static final String device = "DeviceInfo";
     private static final String deviceNumberKey = "deviceId";
     private static final String ipAddressKey = "ipAddress";
+    private static final String livenessDetectKey = "livenessDetect";
     private static final String order = "OrderInfo";
-    private static final String orderKey = "failOrder";
+    private static final String orderKey = "orderList";
     private static final String student = "StudentInfo";
     private static final String studentKey = "studentList";
     private static final String studentSportsKey = "studentSportsList";
@@ -57,14 +59,14 @@ public class SpUtil {
         }.getType());
     }
 
-    public static void putDeviceNumber(String value) {
+    public static void putDeviceNumber(int value) {
         SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
-        sp.edit().putString(deviceNumberKey, value).apply();
+        sp.edit().putInt(deviceNumberKey, value).apply();
     }
 
-    public static String getDeviceNumber() {
+    public static int getDeviceNumber() {
         SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
-        return sp.getString(deviceNumberKey, "11");
+        return sp.getInt(deviceNumberKey, 11);
     }
 
     public static void putIpAddress(String value) {
@@ -77,25 +79,19 @@ public class SpUtil {
         return sp.getString(ipAddressKey, Urls.main);
     }
 
+    public static void putLivenessDetect(boolean value) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        sp.edit().putBoolean(livenessDetectKey, value).apply();
+    }
+
+    public static boolean getLivenessDetect() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        return sp.getBoolean(livenessDetectKey, true);
+    }
+
     public static void putStudentSports(ArrayList<StudentSports> sports) {
         SharedPreferences sp = App.getIns().getSharedPreferences(student, Context.MODE_PRIVATE);
         sp.edit().putString(studentSportsKey, GsonUtil.objToJson(sports)).apply();
-    }
-
-    public static StudentSports getStudentSportsByCode(String key, int type) {
-        SharedPreferences sp = App.getIns().getSharedPreferences(student, Context.MODE_PRIVATE);
-        String json = sp.getString(studentSportsKey, null);
-        if (json == null) {
-            return null;
-        }
-        ArrayList<StudentSports> sports = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<StudentSports>>() {
-        }.getType());
-        for (StudentSports sport : sports) {
-            if (Objects.equals(sport.getCStudCode(), key)) {
-                return sport;
-            }
-        }
-        return null;
     }
 
     public static StudentSports getStudentSportsByCode(String key) {
@@ -228,22 +224,32 @@ public class SpUtil {
         }.getType());
     }
 
-    public static void putFailOrders(ArrayList<Order> orders) {
-        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
-        sp.edit().putString(orderKey, GsonUtil.getGson().toJson(orders)).apply();
-    }
-
-    public static ArrayList<Order> getFailOrders() {
-        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
-        String json = sp.getString(orderKey, null);
-        if (json == null) {
-            return null;
+    public static void putOrders(ArrayList<Order> orders) {
+        if (orders.isEmpty()) {
+            return;
         }
-        return GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Order>>() {
-        }.getType());
+        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
+        sp.edit().putString(orderKey + "_" + orders.get(0).getCBillCode(), GsonUtil.getGson().toJson(orders)).apply();
     }
 
-    public static void clearFailOrders() {
+    public static ArrayList<Order> getOrders() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
+        ArrayList<Order> orders = new ArrayList<>();
+        if (sp.getAll() == null) {
+            return orders;
+        }
+        HashMap<String, ?> map = (HashMap<String, ?>) sp.getAll();
+        for (String key : map.keySet()) {
+            ArrayList<Order> list = GsonUtil.getGson().fromJson((String) map.get(key), new TypeToken<ArrayList<Order>>() {
+            }.getType());
+            if (list != null) {
+                orders.addAll(list);
+            }
+        }
+        return orders;
+    }
+
+    public static void clearOrders() {
         SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
         sp.edit().clear().apply();
     }

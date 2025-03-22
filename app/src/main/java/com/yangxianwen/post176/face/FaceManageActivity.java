@@ -49,14 +49,13 @@ public class FaceManageActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_face_manage);
-
+        //本地人脸库初始化
+        FaceServer.getInstance().init(this);
         executorService = Executors.newSingleThreadExecutor();
         tvNotificationRegisterResult = findViewById(R.id.notification_register_result);
         progressDialog = new ProgressDialog(this, ProgressDialog.update);
-        progressDialog.setCancelable(false);
         progressDialog.setTitleText("注册中，请稍候...");
         progressDialog.setContentText("正在获取进度...");
-        FaceServer.getInstance().init(this);
     }
 
     @Override

@@ -63,8 +63,6 @@ public class OrderViewModel extends BaseViewModel {
         stepStr = application.getResources().getString(R.string.step_number_i);
         distanceStr = application.getResources().getString(R.string.distance_i);
         calorieStr = application.getResources().getString(R.string.calorie_i);
-        //每次进入判断是否有未上传订单
-        createOrder(SpUtil.getFailOrders());
     }
 
     public void setStatusInfo(Student student) {
@@ -209,9 +207,11 @@ public class OrderViewModel extends BaseViewModel {
             return;
         }
 
-        ArrayList<Order> orders = getOrderInfo(student, meals);
+        ArrayList<Order> newOrders = getNewOrder(student, meals);
+        SpUtil.putOrders(newOrders);
+
         HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
-        requestMap.put("requests", orders);
+        requestMap.put("requests", SpUtil.getOrders());
         String jsonRequest = GsonUtil.objToJson(requestMap);
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json;charset=UTF-8"), jsonRequest);
@@ -226,15 +226,15 @@ public class OrderViewModel extends BaseViewModel {
             public void onNext(Result result) {
                 closeLoading.setValue(new Object());
                 if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
-                    SpUtil.clearFailOrders();
+                    SpUtil.clearOrders();
                     hasFailOrder.postValue(false);
-
                 } else {
-                    SpUtil.putFailOrders(orders);
                     hasFailOrder.postValue(true);
                 }
                 orderResult.postValue(new Object());
+
                 balance.postValue(String.format(Locale.getDefault(), "%s%.1f", balanceStr, studentBalance));
+
                 student.setNBalance(studentBalance);
                 SpUtil.setStudentBalance(student);
             }
@@ -242,7 +242,6 @@ public class OrderViewModel extends BaseViewModel {
             @Override
             public void onError(Throwable e) {
                 closeLoading.setValue(new Object());
-                SpUtil.putFailOrders(orders);
                 hasFailOrder.postValue(true);
                 orderResult.postValue(new Object());
 
@@ -259,55 +258,11 @@ public class OrderViewModel extends BaseViewModel {
         });
     }
 
-    public void createOrder(ArrayList<Order> orders) {
-        if (orders == null || orders.isEmpty()) {
-            return;
-        }
-
-        hasFailOrder.postValue(true);
-
-        HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
-        requestMap.put("requests", orders);
-        String jsonRequest = GsonUtil.objToJson(requestMap);
-
-        RequestBody body = RequestBody.create(MediaType.parse("application/json;charset=UTF-8"), jsonRequest);
-
-        HttpUtil.createOrder(body, new Observer<>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-
-            }
-
-            @Override
-            public void onNext(Result result) {
-                SpUtil.clearFailOrders();
-                hasFailOrder.postValue(false);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
-    }
-
-    @NonNull
-    private ArrayList<Order> getOrderInfo(Student student, ArrayList<Meal> meals) {
-        ArrayList<Order> orders;
-        ArrayList<Order> failOrders = SpUtil.getFailOrders();
-        if (failOrders != null && !failOrders.isEmpty()) {
-            orders = new ArrayList<>(failOrders);
-            hasFailOrder.postValue(true);
-        } else {
-            orders = new ArrayList<>();
-        }
+    private ArrayList<Order> getNewOrder(Student student, ArrayList<Meal> meals) {
+        ArrayList<Order> orders = new ArrayList<>();
         String[] times = TimeUtil.getStringTime();
-        String billCode = times[0] + SpUtil.getDeviceNumber();
+        String deviceNumber = String.format(Locale.getDefault(), "%02d", SpUtil.getDeviceNumber());
+        String billCode = times[0] + deviceNumber;
         String create = times[1];
         for (Meal meal : meals) {
             Order order = new Order();
@@ -318,7 +273,7 @@ public class OrderViewModel extends BaseViewModel {
             order.setNPrice(meal.getNSum());
             order.setNSum(meal.getNSum());
             order.setIState(1);
-            order.setCDinnerTable("");
+            order.setCDinnerTable(deviceNumber);
             order.setDCreate(create);
             orders.add(order);
         }
@@ -424,10 +379,8 @@ public class OrderViewModel extends BaseViewModel {
                 allBalance += meal.getNSum();
             }
             double balanceNum = Double.parseDouble(balance.replace(balanceStr, ""));
-            if (balanceNum >= allBalance) {
-                studentBalance = balanceNum - allBalance;
-                return true;
-            }
+            studentBalance = balanceNum - allBalance;
+            return studentBalance >= 0;
         } catch (Exception ignored) {
 
         }
@@ -477,28 +430,8 @@ public class OrderViewModel extends BaseViewModel {
         return false;
     }
 
-    private int getFoodType() {
-        ArrayList<Meal> meals = getMealList().getValue();
-        if (meals == null || meals.isEmpty()) {
-            return -1;
-        }
-        Meal meal = meals.get(0);
-        if ("午餐".equals(meal.getCName())) {
-            return 0;
-        } else if ("晚餐".equals(meal.getCName())) {
-            return 1;
-        } else if ("夜餐".equals(meal.getCName())) {
-            return 2;
-        }
-        return -1;
-    }
-
     public boolean canPick() {
         return orderStatus.getValue() == OrderStatus.pick;
-    }
-
-    public MutableLiveData<OrderStatus> getOrderStatus() {
-        return orderStatus;
     }
 
     public MutableLiveData<Object> getOrderResult() {

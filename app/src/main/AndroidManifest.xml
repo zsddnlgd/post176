@@ -45,6 +45,10 @@
             android:name=".SettingActivity"
             android:launchMode="singleTop" />
 
+        <service
+            android:name=".service.UploadFailOrderService"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

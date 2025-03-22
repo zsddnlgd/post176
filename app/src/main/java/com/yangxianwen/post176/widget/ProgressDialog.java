@@ -34,6 +34,7 @@ public class ProgressDialog extends AlertDialog {
             linearLayout.addView(tvProgress);
             setView(linearLayout, 50, 20, 50, 50);
             setCanceledOnTouchOutside(false);
+            setCancelable(false);
         } else if (type == loading) {
             progressBar = (ProgressBar) LayoutInflater.from(context).inflate(R.layout.dialog_progress_bar, null);
             tvProgress = new TextView(context);
@@ -43,6 +44,7 @@ public class ProgressDialog extends AlertDialog {
             linearLayout.addView(tvProgress);
             setView(linearLayout, 50, 50, 50, 50);
             setCanceledOnTouchOutside(false);
+            setCancelable(false);
         }
     }
 

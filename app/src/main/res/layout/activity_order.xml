@@ -32,7 +32,7 @@
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
-            <com.yangxianwen.post176.face.FaceLayout
+            <com.yangxianwen.post176.face.FaceRecognizeLayout
                 android:id="@+id/face"
                 android:layout_width="180dp"
                 android:layout_height="200dp"
@@ -43,8 +43,8 @@
 
                 <TextureView
                     android:id="@+id/face_preview"
-                    android:layout_width="90dp"
-                    android:layout_height="100dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center" />
 
                 <com.yangxianwen.post176.face.widget.FaceRectView
@@ -55,8 +55,7 @@
 
                 <com.yangxianwen.post176.face.widget.GuideView
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:visibility="gone">
+                    android:layout_height="match_parent">
 
                     <ImageView
                         android:layout_width="90dp"
@@ -71,7 +70,7 @@
                     android:layout_height="match_parent"
                     android:scaleType="fitXY" />
 
-            </com.yangxianwen.post176.face.FaceLayout>
+            </com.yangxianwen.post176.face.FaceRecognizeLayout>
 
             <TextView
                 android:id="@+id/cStudName"
