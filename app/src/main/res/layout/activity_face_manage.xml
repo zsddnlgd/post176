@@ -40,7 +40,7 @@
             android:layout_gravity="center_horizontal"
             android:background="@drawable/bg_button"
             android:onClick="exit"
-            android:text="退出"
+            android:text="@string/exit"
             android:textColor="@color/white" />
 
         <TextView

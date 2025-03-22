@@ -42,6 +42,12 @@ public class TimeUtil {
         return cCurrent.getTimeInMillis() >= cStart.getTimeInMillis() && cCurrent.getTimeInMillis() <= cEnd.getTimeInMillis();
     }
 
+    public static String getDate() {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        return simpleDateFormat.format(calendar.getTime());
+    }
+
     public static String[] getStringTime() {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());

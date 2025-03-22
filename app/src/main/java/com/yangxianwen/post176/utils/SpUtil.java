@@ -2,7 +2,6 @@ package com.yangxianwen.post176.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import com.google.gson.reflect.TypeToken;
 import com.yangxianwen.post176.App;
@@ -11,6 +10,7 @@ import com.yangxianwen.post176.bean.Nfc;
 import com.yangxianwen.post176.bean.Order;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.bean.StudentSports;
+import com.yangxianwen.post176.bean.Turnover;
 import com.yangxianwen.post176.values.Urls;
 
 import java.util.ArrayList;
@@ -28,6 +28,34 @@ public class SpUtil {
     private static final String studentSportsKey = "studentSportsList";
     private static final String meal = "MealInfo";
     private static final String mealKey = "mealList";
+    private static final String turnover = "TurnoverInfo";
+
+    public static void setTurnover(double price) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(turnover, Context.MODE_PRIVATE);
+        String key = TimeUtil.getDate();
+        String json = sp.getString(key, null);
+        Turnover turnover;
+        if (json == null) {
+            turnover = new Turnover();
+        } else {
+            turnover = GsonUtil.getGson().fromJson(json, new TypeToken<Turnover>() {
+            }.getType());
+        }
+        turnover.setOrderNumber(turnover.getOrderNumber() + 1);
+        turnover.setOrderPrice(turnover.getOrderPrice() + price);
+        sp.edit().putString(key, GsonUtil.getGson().toJson(turnover)).apply();
+    }
+
+    public static Turnover getTurnover() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(turnover, Context.MODE_PRIVATE);
+        String key = TimeUtil.getDate();
+        String json = sp.getString(key, null);
+        if (json == null) {
+            return null;
+        }
+        return GsonUtil.getGson().fromJson(json, new TypeToken<Turnover>() {
+        }.getType());
+    }
 
     public static void putDeviceNumber(String value) {
         SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
@@ -63,7 +91,7 @@ public class SpUtil {
         ArrayList<StudentSports> sports = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<StudentSports>>() {
         }.getType());
         for (StudentSports sport : sports) {
-            if (Objects.equals(sport.getCStudCode(), key) ) {
+            if (Objects.equals(sport.getCStudCode(), key)) {
                 return sport;
             }
         }
@@ -79,7 +107,7 @@ public class SpUtil {
         ArrayList<StudentSports> sports = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<StudentSports>>() {
         }.getType());
         for (StudentSports sport : sports) {
-            if (Objects.equals(sport.getCStudCode(), key) ) {
+            if (Objects.equals(sport.getCStudCode(), key)) {
                 return sport;
             }
         }

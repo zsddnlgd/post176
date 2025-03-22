@@ -14,6 +14,7 @@ import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.HttpUtil;
 import com.yangxianwen.post176.utils.SpUtil;
+import com.yangxianwen.post176.values.Constants;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public class MainViewModel extends BaseViewModel {
             public void onNext(ArrayList<Student> students) {
                 SpUtil.putStudent(students);
 
-                String[] imgFileDir = new File(FaceManageActivity.REGISTER_DIR).list();
+                String[] imgFileDir = new File(FileUtil.REGISTER_DIR).list();
                 List<String> imgFiles = imgFileDir == null ? new ArrayList<>() : Arrays.asList(imgFileDir);
 
                 Log.i(TAG, "registerStatusPic imgFiles = " + imgFiles);
@@ -100,7 +101,7 @@ public class MainViewModel extends BaseViewModel {
 
     private void downLoadPhoto(ArrayList<Student> students, int size) {
         String picPath = students.get(0).getCPic();
-        String filePath = picPath.replace("/Pic/StuImg", FaceManageActivity.REGISTER_DIR);
+        String filePath = picPath.replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
 
         HttpUtil.downloadStudentPhoto(picPath, new Observer<>() {
             @Override

@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -18,6 +17,8 @@ import com.arcsoft.imageutil.ArcSoftImageUtilError;
 import com.yangxianwen.post176.R;
 import com.yangxianwen.post176.base.BaseActivity;
 import com.yangxianwen.post176.face.faceserver.FaceServer;
+import com.yangxianwen.post176.utils.FileUtil;
+import com.yangxianwen.post176.values.Constants;
 import com.yangxianwen.post176.widget.ProgressDialog;
 
 import java.io.File;
@@ -33,10 +34,6 @@ import java.util.concurrent.Executors;
  */
 public class FaceManageActivity extends BaseActivity {
 
-    //注册图所在的目录
-    public static final String ROOT_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "postPic";
-    public static final String REGISTER_DIR = ROOT_DIR + File.separator + "register";
-    public static final String REGISTER_FAILED_DIR = ROOT_DIR + File.separator + "failed";
     private ExecutorService executorService;
 
     private TextView tvNotificationRegisterResult;
@@ -84,16 +81,16 @@ public class FaceManageActivity extends BaseActivity {
     }
 
     private void doRegister() {
-        File dir = new File(REGISTER_DIR);
+        File dir = new File(FileUtil.REGISTER_DIR);
         if (!dir.exists()) {
-            showToast(getString(R.string.batch_process_path_is_not_exists, REGISTER_DIR));
+            showToast(getString(R.string.batch_process_path_is_not_exists, FileUtil.REGISTER_DIR));
             return;
         }
         if (!dir.isDirectory()) {
-            showToast(getString(R.string.batch_process_path_is_not_dir, REGISTER_DIR));
+            showToast(getString(R.string.batch_process_path_is_not_dir, FileUtil.REGISTER_DIR));
             return;
         }
-        String[] imgFileDir = new File(getFilesDir().getAbsolutePath() + File.separator + FaceServer.SAVE_IMG_DIR).list();
+        String[] imgFileDir = new File(FileUtil.SAVE_IMG_DIR).list();
         List<String> imgFiles = imgFileDir == null ? new ArrayList<>() : Arrays.asList(imgFileDir);
         final File[] jpgFiles = dir.listFiles(new FilenameFilter() {
             @Override
@@ -126,7 +123,7 @@ public class FaceManageActivity extends BaseActivity {
                     final File jpgFile = jpgFiles[i];
                     Bitmap bitmap = BitmapFactory.decodeFile(jpgFile.getAbsolutePath());
                     if (bitmap == null) {
-                        File failedFile = new File(REGISTER_FAILED_DIR + File.separator + jpgFile.getName());
+                        File failedFile = new File(FileUtil.REGISTER_FAILED_DIR + File.separator + jpgFile.getName());
                         if (!failedFile.getParentFile().exists()) {
                             failedFile.getParentFile().mkdirs();
                         }
@@ -135,7 +132,7 @@ public class FaceManageActivity extends BaseActivity {
                     }
                     bitmap = ArcSoftImageUtil.getAlignedBitmap(bitmap, true);
                     if (bitmap == null) {
-                        File failedFile = new File(REGISTER_FAILED_DIR + File.separator + jpgFile.getName());
+                        File failedFile = new File(FileUtil.REGISTER_FAILED_DIR + File.separator + jpgFile.getName());
                         if (!failedFile.getParentFile().exists()) {
                             failedFile.getParentFile().mkdirs();
                         }
@@ -157,7 +154,7 @@ public class FaceManageActivity extends BaseActivity {
                     boolean success = FaceServer.getInstance().registerBgr24(FaceManageActivity.this, bgr24, bitmap.getWidth(), bitmap.getHeight(),
                             jpgFile.getName().substring(0, jpgFile.getName().lastIndexOf(".")));
                     if (!success) {
-                        File failedFile = new File(REGISTER_FAILED_DIR + File.separator + jpgFile.getName());
+                        File failedFile = new File(FileUtil.REGISTER_FAILED_DIR + File.separator + jpgFile.getName());
                         if (!failedFile.getParentFile().exists()) {
                             failedFile.getParentFile().mkdirs();
                         }
@@ -171,7 +168,7 @@ public class FaceManageActivity extends BaseActivity {
                     @Override
                     public void run() {
                         progressDialog.dismiss();
-                        tvNotificationRegisterResult.append(getString(R.string.batch_process_finished_info, totalCount, finalSuccessCount, totalCount - finalSuccessCount, REGISTER_FAILED_DIR));
+                        tvNotificationRegisterResult.append(getString(R.string.batch_process_finished_info, totalCount, finalSuccessCount, totalCount - finalSuccessCount, FileUtil.REGISTER_FAILED_DIR));
                     }
                 });
                 Log.i(FaceManageActivity.class.getSimpleName(), "run: " + executorService.isShutdown());
@@ -196,7 +193,7 @@ public class FaceManageActivity extends BaseActivity {
     }
 
     public void clearFaces(View view) {
-        int faceNum = FaceServer.getInstance().getFaceNumber(this);
+        int faceNum = FaceServer.getInstance().getFaceNumber();
         if (faceNum == 0) {
             showToast(getString(R.string.batch_process_no_face_need_to_delete));
         } else {

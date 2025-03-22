@@ -15,24 +15,22 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="本机编号" />
+            android:text="@string/device_number" />
 
         <EditText
             android:id="@+id/device_number"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text" />
+            android:layout_height="wrap_content" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="IP地址" />
+            android:text="@string/ip_address" />
 
         <EditText
             android:id="@+id/ip_address"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text" />
+            android:layout_height="wrap_content" />
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -48,7 +46,7 @@
                 android:layout_marginBottom="50dp"
                 android:background="@drawable/bg_button"
                 android:gravity="center"
-                android:text="保存"
+                android:text="@string/save"
                 android:textColor="@color/white"
                 android:textSize="20sp" />
 
@@ -62,7 +60,7 @@
                 android:layout_marginBottom="50dp"
                 android:background="@drawable/bg_button"
                 android:gravity="center"
-                android:text="取消"
+                android:text="@string/cancel"
                 android:textColor="@color/white"
                 android:textSize="20sp" />
 

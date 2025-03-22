@@ -17,6 +17,8 @@ import com.arcsoft.imageutil.ArcSoftImageUtil;
 import com.arcsoft.imageutil.ArcSoftImageUtilError;
 import com.arcsoft.imageutil.ArcSoftRotateDegree;
 import com.yangxianwen.post176.face.model.FaceRegisterInfo;
+import com.yangxianwen.post176.utils.FileUtil;
+import com.yangxianwen.post176.values.Constants;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,15 +36,6 @@ public class FaceServer {
     private static FaceEngine faceEngine = null;
     private static FaceServer faceServer = null;
     private static List<FaceRegisterInfo> faceRegisterInfoList;
-    public static String ROOT_PATH;
-    /**
-     * 存放注册图的目录
-     */
-    public static final String SAVE_IMG_DIR = "register" + File.separator + "imgs";
-    /**
-     * 存放特征的目录
-     */
-    private static final String SAVE_FEATURE_DIR = "register" + File.separator + "features";
 
     /**
      * 是否正在搜索人脸，保证搜索操作单线程进行
@@ -72,7 +65,7 @@ public class FaceServer {
                 faceEngine = new FaceEngine();
                 int engineCode = faceEngine.init(context, DetectMode.ASF_DETECT_MODE_IMAGE, DetectFaceOrientPriority.ASF_OP_0_ONLY, 16, 1, FaceEngine.ASF_FACE_RECOGNITION | FaceEngine.ASF_FACE_DETECT);
                 if (engineCode == ErrorInfo.MOK) {
-                    initFaceList(context);
+                    initFaceList();
                     return true;
                 } else {
                     faceEngine = null;
@@ -102,15 +95,10 @@ public class FaceServer {
 
     /**
      * 初始化人脸特征数据以及人脸特征数据对应的注册图
-     *
-     * @param context 上下文对象
      */
-    private void initFaceList(Context context) {
+    private void initFaceList() {
         synchronized (this) {
-            if (ROOT_PATH == null) {
-                ROOT_PATH = context.getFilesDir().getAbsolutePath();
-            }
-            File featureDir = new File(ROOT_PATH + File.separator + SAVE_FEATURE_DIR);
+            File featureDir = new File(FileUtil.SAVE_FEATURE_DIR);
             if (!featureDir.exists() || !featureDir.isDirectory()) {
                 return;
             }
@@ -133,23 +121,16 @@ public class FaceServer {
         }
     }
 
-    public int getFaceNumber(Context context) {
+    public int getFaceNumber() {
         synchronized (this) {
-            if (context == null) {
-                return 0;
-            }
-            if (ROOT_PATH == null) {
-                ROOT_PATH = context.getFilesDir().getAbsolutePath();
-            }
-
-            File featureFileDir = new File(ROOT_PATH + File.separator + SAVE_FEATURE_DIR);
+            File featureFileDir = new File(FileUtil.SAVE_FEATURE_DIR);
             int featureCount = 0;
             if (featureFileDir.exists() && featureFileDir.isDirectory()) {
                 String[] featureFiles = featureFileDir.list();
                 featureCount = featureFiles == null ? 0 : featureFiles.length;
             }
             int imageCount = 0;
-            File imgFileDir = new File(ROOT_PATH + File.separator + SAVE_IMG_DIR);
+            File imgFileDir = new File(FileUtil.SAVE_IMG_DIR);
             if (imgFileDir.exists() && imgFileDir.isDirectory()) {
                 String[] imageFiles = imgFileDir.list();
                 imageCount = imageFiles == null ? 0 : imageFiles.length;
@@ -163,13 +144,10 @@ public class FaceServer {
             if (context == null) {
                 return 0;
             }
-            if (ROOT_PATH == null) {
-                ROOT_PATH = context.getFilesDir().getAbsolutePath();
-            }
             if (faceRegisterInfoList != null) {
                 faceRegisterInfoList.clear();
             }
-            File featureFileDir = new File(ROOT_PATH + File.separator + SAVE_FEATURE_DIR);
+            File featureFileDir = new File(FileUtil.SAVE_FEATURE_DIR);
             int deletedFeatureCount = 0;
             if (featureFileDir.exists() && featureFileDir.isDirectory()) {
                 File[] featureFiles = featureFileDir.listFiles();
@@ -182,7 +160,7 @@ public class FaceServer {
                 }
             }
             int deletedImageCount = 0;
-            File imgFileDir = new File(ROOT_PATH + File.separator + SAVE_IMG_DIR);
+            File imgFileDir = new File(FileUtil.SAVE_IMG_DIR);
             if (imgFileDir.exists() && imgFileDir.isDirectory()) {
                 File[] imgFiles = imgFileDir.listFiles();
                 if (imgFiles != null && imgFiles.length > 0) {
@@ -214,18 +192,14 @@ public class FaceServer {
                 Log.e(TAG, "registerNv21: invalid params");
                 return false;
             }
-
-            if (ROOT_PATH == null) {
-                ROOT_PATH = context.getFilesDir().getAbsolutePath();
-            }
             //特征存储的文件夹
-            File featureDir = new File(ROOT_PATH + File.separator + SAVE_FEATURE_DIR);
+            File featureDir = new File(FileUtil.SAVE_FEATURE_DIR);
             if (!featureDir.exists() && !featureDir.mkdirs()) {
                 Log.e(TAG, "registerNv21: can not create feature directory");
                 return false;
             }
             //图片存储的文件夹
-            File imgDir = new File(ROOT_PATH + File.separator + SAVE_IMG_DIR);
+            File imgDir = new File(FileUtil.SAVE_IMG_DIR);
             if (!imgDir.exists() && !imgDir.mkdirs()) {
                 Log.e(TAG, "registerNv21: can not create image directory");
                 return false;
@@ -300,17 +274,14 @@ public class FaceServer {
                 return false;
             }
 
-            if (ROOT_PATH == null) {
-                ROOT_PATH = context.getFilesDir().getAbsolutePath();
-            }
             //特征存储的文件夹
-            File featureDir = new File(ROOT_PATH + File.separator + SAVE_FEATURE_DIR);
+            File featureDir = new File(FileUtil.SAVE_FEATURE_DIR);
             if (!featureDir.exists() && !featureDir.mkdirs()) {
                 Log.e(TAG, "registerBgr24: can not create feature directory");
                 return false;
             }
             //图片存储的文件夹
-            File imgDir = new File(ROOT_PATH + File.separator + SAVE_IMG_DIR);
+            File imgDir = new File(FileUtil.SAVE_IMG_DIR);
             if (!imgDir.exists() && !imgDir.mkdirs()) {
                 Log.e(TAG, "registerBgr24: can not create image directory");
                 return false;

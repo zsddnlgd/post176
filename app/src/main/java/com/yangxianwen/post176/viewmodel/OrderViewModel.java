@@ -1,11 +1,11 @@
 package com.yangxianwen.post176.viewmodel;
 
 import android.app.Application;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 
+import com.yangxianwen.post176.R;
 import com.yangxianwen.post176.base.BaseViewModel;
 import com.yangxianwen.post176.bean.Balance;
 import com.yangxianwen.post176.bean.Meal;
@@ -18,6 +18,7 @@ import com.yangxianwen.post176.utils.GsonUtil;
 import com.yangxianwen.post176.utils.HttpUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.utils.TimeUtil;
+import com.yangxianwen.post176.values.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,32 +46,46 @@ public class OrderViewModel extends BaseViewModel {
     private final MutableLiveData<ArrayList<Meal>> mealEmptyList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> hasFailOrder = new MutableLiveData<>(false);
     private double studentBalance = 0;
+    private final String nameStr;
+    private final String classStr;
+    private final String balanceStr;
+    private final String nfcStr;
+    private final String stepStr;
+    private final String distanceStr;
+    private final String calorieStr;
 
     public OrderViewModel(@NonNull Application application) {
         super(application);
+        nameStr = application.getResources().getString(R.string.studName);
+        classStr = application.getResources().getString(R.string.className);
+        balanceStr = application.getResources().getString(R.string.balance_n);
+        nfcStr = application.getResources().getString(R.string.nfc_id);
+        stepStr = application.getResources().getString(R.string.step_number_i);
+        distanceStr = application.getResources().getString(R.string.distance_i);
+        calorieStr = application.getResources().getString(R.string.calorie_i);
         //每次进入判断是否有未上传订单
         createOrder(SpUtil.getFailOrders());
     }
 
     public void setStatusInfo(Student student) {
-        name.setValue("姓名：" + (student != null && student.getCStudName() != null ? student.getCStudName() : ""));
-        className.setValue("班级：" + (student != null && student.getCClass() != null ? student.getCClass() : ""));
-        balance.setValue("余额：" + (student != null ? student.getNBalance() : "0.0"));
-        nfcNumber.setValue("卡号：" + (student != null && student.getNfcId() != null ? student.getNfcId() : ""));
+        name.setValue(nameStr + (student != null && student.getCStudName() != null ? student.getCStudName() : ""));
+        className.setValue(classStr + (student != null && student.getCClass() != null ? student.getCClass() : ""));
+        balance.setValue(balanceStr + (student != null ? student.getNBalance() : "0.0"));
+        nfcNumber.setValue(nfcStr + (student != null && student.getNfcId() != null ? student.getNfcId() : ""));
         StudentSports sports = SpUtil.getStudentSportsByCode(student != null ? student.getCStudCode() : "");
-        stepNumber.setValue("运动量（步数）：" + (sports != null ? sports.getIStepNumber() : "0"));
-        distance.setValue("距离（米）：" + (sports != null ? sports.getIDistance() : "0"));
-        calorie.postValue("卡路里：" + (sports != null ? sports.getNCalorie() : "0.0"));
+        stepNumber.setValue(stepStr + (sports != null ? sports.getIStepNumber() : "0"));
+        distance.setValue(distanceStr + (sports != null ? sports.getIDistance() : "0"));
+        calorie.postValue(calorieStr + (sports != null ? sports.getNCalorie() : "0.0"));
     }
 
     public void clearStatusInfo() {
-        name.setValue("姓名：");
-        className.setValue("班级：");
-        balance.setValue("余额：");
-        nfcNumber.setValue("卡号：");
-        stepNumber.setValue("运动量（步数）：");
-        distance.setValue("距离（米）：");
-        calorie.setValue("卡路里：");
+        name.setValue(nameStr);
+        className.setValue(classStr);
+        balance.setValue(balanceStr);
+        nfcNumber.setValue(nfcStr);
+        stepNumber.setValue(stepStr);
+        distance.setValue(distanceStr);
+        calorie.setValue(calorieStr);
     }
 
     public void getMeal() {
@@ -93,9 +108,6 @@ public class OrderViewModel extends BaseViewModel {
                     if (TimeUtil.inTime(start, end, "yyyyMMddHH:mm")) {
                         subList.add(meal);
                     }
-//                    if (TimeUtil.inTime(meal.getCStartTime(), meal.getCEndTime(), "HH:mm")) {
-//                        subList.add(meal);
-//                    }
                 }
                 if (subList.isEmpty()) {
                     tips.postValue("当前不在开餐时间");
@@ -122,9 +134,6 @@ public class OrderViewModel extends BaseViewModel {
                     if (TimeUtil.inTime(start, end, "yyyy-MM-ddHH:mm")) {
                         subList.add(meal);
                     }
-//                    if (TimeUtil.inTime(meal.getCStartTime(), meal.getCEndTime(), "HH:mm")) {
-//                        subList.add(meal);
-//                    }
                 }
                 if (subList.isEmpty()) {
                     tips.postValue("当前不在开餐时间");
@@ -155,7 +164,7 @@ public class OrderViewModel extends BaseViewModel {
                 }
 
                 closeLoading.setValue(new Object());
-                balance.postValue("余额：" + result.getNBalance());
+                balance.postValue(balanceStr + result.getNBalance());
 
                 student.setNBalance(result.getNBalance());
                 SpUtil.setStudentBalance(student);
@@ -171,6 +180,18 @@ public class OrderViewModel extends BaseViewModel {
 
             }
         });
+    }
+
+    public void saveTurnover() {
+        ArrayList<Meal> meals = getMealSelectList().getValue();
+        if (meals == null) {
+            return;
+        }
+        double allBalance = 0;
+        for (Meal meal : meals) {
+            allBalance += meal.getNSum();
+        }
+        SpUtil.setTurnover(allBalance);
     }
 
     public void createOrder(Student student) {
@@ -190,7 +211,6 @@ public class OrderViewModel extends BaseViewModel {
         HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
         requestMap.put("requests", orders);
         String jsonRequest = GsonUtil.objToJson(requestMap);
-        Log.i(TAG, "createOrder jsonRequest = " + jsonRequest);
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json;charset=UTF-8"), jsonRequest);
 
@@ -203,12 +223,16 @@ public class OrderViewModel extends BaseViewModel {
             @Override
             public void onNext(Result result) {
                 closeLoading.setValue(new Object());
-                SpUtil.clearFailOrders();
-                hasFailOrder.postValue(false);
+                if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
+                    SpUtil.clearFailOrders();
+                    hasFailOrder.postValue(false);
+
+                } else {
+                    SpUtil.putFailOrders(orders);
+                    hasFailOrder.postValue(true);
+                }
                 orderResult.postValue(new Object());
-
-                balance.postValue(String.format(Locale.getDefault(), "余额：%.1f", studentBalance));
-
+                balance.postValue(String.format(Locale.getDefault(), "%s%.1f", balanceStr, studentBalance));
                 student.setNBalance(studentBalance);
                 SpUtil.setStudentBalance(student);
             }
@@ -220,7 +244,7 @@ public class OrderViewModel extends BaseViewModel {
                 hasFailOrder.postValue(true);
                 orderResult.postValue(new Object());
 
-                balance.postValue(String.format(Locale.getDefault(), "余额：%.1f", studentBalance));
+                balance.postValue(String.format(Locale.getDefault(), "%s%.1f", balanceStr, studentBalance));
 
                 student.setNBalance(studentBalance);
                 SpUtil.setStudentBalance(student);
@@ -243,7 +267,6 @@ public class OrderViewModel extends BaseViewModel {
         HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
         requestMap.put("requests", orders);
         String jsonRequest = GsonUtil.objToJson(requestMap);
-        Log.i(TAG, "createOrder jsonRequest = " + jsonRequest);
 
         RequestBody body = RequestBody.create(MediaType.parse("application/json;charset=UTF-8"), jsonRequest);
 
@@ -310,12 +333,13 @@ public class OrderViewModel extends BaseViewModel {
             @Override
             public void onNext(Result result) {
                 closeLoading.setValue(new Object());
-                tips.postValue("绑定成功");
+                if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
+                    nfcNumber.postValue(nfcStr + rfid);
 
-                nfcNumber.postValue("卡号：" + rfid);
-
-                student.setNfcId(rfid);
-                SpUtil.setStudentNfc(student);
+                    student.setNfcId(rfid);
+                    SpUtil.setStudentNfc(student);
+                }
+                tips.postValue(result.getMessage());
             }
 
             @Override
@@ -397,7 +421,7 @@ public class OrderViewModel extends BaseViewModel {
             for (Meal meal : meals) {
                 allBalance += meal.getNSum();
             }
-            double balanceNum = Double.parseDouble(balance.replace("余额：", ""));
+            double balanceNum = Double.parseDouble(balance.replace(balanceStr, ""));
             if (balanceNum >= allBalance) {
                 studentBalance = balanceNum - allBalance;
                 return true;
@@ -414,7 +438,7 @@ public class OrderViewModel extends BaseViewModel {
             return false;
         }
         try {
-            double calorieNum = Double.parseDouble(calorie.replace("卡路里：", ""));
+            double calorieNum = Double.parseDouble(calorie.replace(calorieStr, ""));
             if (calorieNum > 0) {
                 return true;
             }
@@ -441,7 +465,7 @@ public class OrderViewModel extends BaseViewModel {
             for (Meal tempMeal : meals) {
                 allCalorie += tempMeal.getNReferenceValue();
             }
-            double calorieNum = Double.parseDouble(calorie.replace("卡路里：", ""));
+            double calorieNum = Double.parseDouble(calorie.replace(calorieStr, ""));
             if (calorieNum - allCalorie >= meal.getNReferenceValue()) {
                 return true;
             }

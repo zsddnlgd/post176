@@ -134,6 +134,8 @@ public class FaceHelper {
      * @param trackId  请求人脸特征的唯一请求码，一般使用trackId
      */
     public void requestFaceFeature(byte[] nv21, FaceInfo faceInfo, int width, int height, int format, Integer trackId) {
+        Log.i(TAG, "requestFaceFeature width = " + width);
+        Log.i(TAG, "requestFaceFeature height = " + height);
         if (faceListener != null) {
             if (frEngine != null && frThreadQueue.remainingCapacity() > 0) {
                 frExecutor.execute(new FaceRecognizeRunnable(nv21, faceInfo, width, height, format, trackId));
@@ -205,7 +207,6 @@ public class FaceHelper {
         if (faceListener != null) {
             if (ftEngine != null) {
                 faceInfoList.clear();
-                Log.i(TAG, "onPreviewFrame3 : " + previewSize.width + "  " + previewSize.height);
                 int code = ftEngine.detectFaces(nv21, previewSize.width, previewSize.height, FaceEngine.CP_PAF_NV21, faceInfoList);
                 if (code != ErrorInfo.MOK) {
                     faceListener.onFail(new Exception("ft failed,code is " + code));

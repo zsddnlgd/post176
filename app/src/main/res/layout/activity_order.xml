@@ -16,41 +16,60 @@
         tools:context=".OrderActivity">
 
         <LinearLayout
-            android:layout_width="300dp"
+            android:layout_width="240dp"
             android:layout_height="match_parent"
             android:background="@color/color_main"
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/title"
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="50dp"
+                android:layout_marginTop="20dp"
                 android:gravity="center"
                 android:text="@string/order_title_name"
                 android:textColor="@color/white"
-                android:textSize="22sp" />
+                android:textSize="18sp" />
 
             <com.yangxianwen.post176.face.FaceLayout
-                android:layout_width="225dp"
-                android:layout_height="300dp"
+                android:id="@+id/face"
+                android:layout_width="180dp"
+                android:layout_height="200dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="50dp"
-                android:background="@color/white"
+                android:layout_marginTop="20dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <TextureView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:id="@+id/face_preview"
+                    android:layout_width="90dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center" />
 
                 <com.yangxianwen.post176.face.widget.FaceRectView
+                    android:id="@+id/face_identify"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
 
-                <androidx.recyclerview.widget.RecyclerView
+                <com.yangxianwen.post176.face.widget.GuideView
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="90dp"
+                        android:layout_height="100dp"
+                        android:layout_gravity="center" />
+
+                </com.yangxianwen.post176.face.widget.GuideView>
+
+                <ImageView
+                    android:id="@+id/face_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitXY" />
 
             </com.yangxianwen.post176.face.FaceLayout>
 
@@ -59,10 +78,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
-                android:layout_marginTop="50dp"
+                android:layout_marginTop="20dp"
                 android:text="@string/studName"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp" />
+                android:textColor="@color/white"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/cClass"
@@ -70,8 +89,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
                 android:text="@string/className"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp" />
+                android:textColor="@color/white"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/nBalance"
@@ -79,8 +98,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
                 android:text="@string/balance_n"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp" />
+                android:textColor="@color/white"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/iStep"
@@ -88,8 +107,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
                 android:text="@string/step_number_i"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp" />
+                android:textColor="@color/white"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/iDistance"
@@ -97,8 +116,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
                 android:text="@string/distance_i"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp" />
+                android:textColor="@color/white"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/iCalorie"
@@ -106,8 +125,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="50dp"
                 android:text="@string/calorie_i"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp" />
+                android:textColor="@color/white"
+                android:textSize="14sp" />
 
             <TextView
                 android:id="@+id/nfc_id"
@@ -116,7 +135,28 @@
                 android:layout_marginStart="50dp"
                 android:text="@string/nfc_id"
                 android:textColor="@color/white"
-                android:textSize="18sp" />
+                android:textSize="14sp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/fail_order"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/bg_round_bold"
+                    android:gravity="center"
+                    android:text="@string/exclamation_mark"
+                    android:textColor="@color/red"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+            </RelativeLayout>
 
         </LinearLayout>
 
@@ -127,136 +167,147 @@
 
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:text="主食"
+                android:text="@string/staple_food"
                 android:textColor="@color/white"
-                android:textSize="20sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <!-- 主食第一行 -->
             <LinearLayout
                 android:id="@+id/staple_food_container_1"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:divider="@drawable/bg_snap"
+                android:gravity="bottom"
                 android:orientation="horizontal"
-                android:padding="2dp"
-                android:weightSum="4" />
+                android:showDividers="middle" />
 
             <!-- 主食第二行 -->
             <LinearLayout
                 android:id="@+id/staple_food_container_2"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:divider="@drawable/bg_snap"
+                android:gravity="bottom"
                 android:orientation="horizontal"
-                android:padding="2dp"
-                android:weightSum="4" />
+                android:showDividers="middle" />
 
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:text="副食"
+                android:text="@string/side_dishes"
                 android:textColor="@color/white"
-                android:textSize="20sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <!-- 副食第一行 -->
             <LinearLayout
                 android:id="@+id/side_dish_container_1"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:divider="@drawable/bg_snap"
+                android:gravity="bottom"
                 android:orientation="horizontal"
-                android:padding="2dp"
-                android:weightSum="4" />
+                android:showDividers="middle" />
 
             <!-- 副食第二行 -->
             <LinearLayout
                 android:id="@+id/side_dish_container_2"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:divider="@drawable/bg_snap"
+                android:gravity="bottom"
                 android:orientation="horizontal"
-                android:padding="2dp"
-                android:weightSum="4" />
+                android:showDividers="middle" />
 
             <!-- 副食第三行 -->
             <LinearLayout
                 android:id="@+id/side_dish_container_3"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:divider="@drawable/bg_snap"
+                android:gravity="bottom"
                 android:orientation="horizontal"
-                android:padding="2dp"
-                android:weightSum="4" />
+                android:showDividers="middle" />
 
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:text="特色餐"
+                android:text="@string/star_anis"
                 android:textColor="@color/white"
-                android:textSize="20sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <!-- 特色餐 -->
             <LinearLayout
                 android:id="@+id/special_meal_container"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:divider="@drawable/bg_snap"
+                android:gravity="bottom"
                 android:orientation="horizontal"
-                android:padding="2dp"
-                android:weightSum="4" />
+                android:showDividers="middle" />
 
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:text="特惠菜/免费汤"
+                android:text="@string/special_offer_dishes"
                 android:textColor="@color/white"
-                android:textSize="20sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <!-- 特惠菜和免费汤 -->
             <LinearLayout
                 android:id="@+id/special_dish_soup_container"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:divider="@drawable/bg_snap"
+                android:gravity="bottom"
                 android:orientation="horizontal"
-                android:padding="2dp"
-                android:weightSum="4" />
+                android:showDividers="middle" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -268,21 +319,38 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:layout_marginStart="300dp"
-                    android:text="总金额：0.00元"
+                    android:layout_marginStart="100dp"
+                    android:text="@string/total_amount"
                     android:textColor="@color/color_main"
-                    android:textSize="48sp" />
+                    android:textSize="30sp" />
 
                 <TextView
                     android:id="@+id/confirm_button"
-                    android:layout_width="200dp"
-                    android:layout_height="100dp"
+                    android:layout_width="100dp"
+                    android:layout_height="50dp"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:layout_marginEnd="20dp"
+                    android:layout_marginEnd="200dp"
                     android:background="@drawable/bg_button"
+                    android:gravity="center"
+                    android:text="@string/ok"
                     android:textColor="@color/white"
-                    android:textSize="48sp" />
+                    android:textSize="20sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/next_button"
+                    android:layout_width="100dp"
+                    android:layout_height="50dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="50dp"
+                    android:background="@drawable/bg_button"
+                    android:gravity="center"
+                    android:text="@string/next"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:visibility="gone" />
 
             </RelativeLayout>
 

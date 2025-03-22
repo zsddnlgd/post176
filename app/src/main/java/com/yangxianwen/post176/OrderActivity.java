@@ -14,9 +14,9 @@ import com.bumptech.glide.Glide;
 import com.yangxianwen.post176.base.BaseMvvmActivity;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Student;
-import com.yangxianwen.post176.databinding.DisplayOrderBinding;
-import com.yangxianwen.post176.face.FaceManageActivity;
+import com.yangxianwen.post176.databinding.ActivityOrderBinding;
 import com.yangxianwen.post176.resolver.BarcodeScannerResolver;
+import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
 
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
-public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrderBinding> {
+public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrderBinding> {
 
     private OrderDisplay orderDisplay;
 
@@ -39,7 +39,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
     @Override
     protected int getLayoutId() {
-        return R.layout.display_order;
+        return R.layout.activity_order;
     }
 
     @Override
@@ -185,7 +185,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             for (View item : items) {
                 View emptyView = item.findViewById(R.id.food_empty);
                 Meal itemMeal = (Meal) item.getTag();
-                emptyView.setVisibility(View.GONE);
+                emptyView.setVisibility(View.INVISIBLE);
                 item.setEnabled(true);
                 for (Meal meal : meals) {
                     if (Objects.equals(itemMeal.getCFoodCode(), meal.getCFoodCode())) {
@@ -216,7 +216,6 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
             Student student = SpUtil.getStudentByPic(String.format("/Pic/StuImg/%s.jpg", result.getUserName()));
             showStudentInfo(student);
         });
-
     }
 
     private void initBarcodeScanner() {
@@ -250,6 +249,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
             showLoading("正在创建订单...");
             mViewModel.createOrder(currentStudent);
+            mViewModel.saveTurnover();
         });
         mBinding.nextButton.setOnClickListener(v -> {
             //取消打餐
@@ -362,13 +362,13 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
         mViewModel.getMealSelectList().setValue(new ArrayList<>());
         for (View item : items) {
             View selectView = item.findViewById(R.id.food_select);
-            selectView.setVisibility(View.GONE);
+            selectView.setVisibility(View.INVISIBLE);
             View emptyView = item.findViewById(R.id.food_empty);
             Meal meal = (Meal) item.getTag();
             if (mViewModel.containsMealEmpty(meal)) {
                 emptyView.setVisibility(View.VISIBLE);
             } else {
-                emptyView.setVisibility(View.GONE);
+                emptyView.setVisibility(View.INVISIBLE);
             }
         }
 
@@ -386,7 +386,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, DisplayOrder
 
         currentStudent = student;
 
-        String filePath = student.getCPic().replace("/Pic/StuImg", FaceManageActivity.REGISTER_DIR);
+        String filePath = student.getCPic().replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
         Glide.with(getActivity()).load(new File(filePath)).into(mBinding.faceIcon);
         mBinding.face.stop();
 

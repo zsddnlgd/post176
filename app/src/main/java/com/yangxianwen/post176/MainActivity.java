@@ -8,13 +8,14 @@ import android.view.View;
 import androidx.core.app.ActivityCompat;
 
 import com.yangxianwen.post176.base.BaseMvvmActivity;
-import com.yangxianwen.post176.databinding.DisplayMainBinding;
+import com.yangxianwen.post176.bean.Turnover;
+import com.yangxianwen.post176.databinding.ActivityMainBinding;
 import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.utils.ActiveUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.MainViewModel;
 
-public class MainActivity extends BaseMvvmActivity<MainViewModel, DisplayMainBinding> {
+public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBinding> {
 
     private static final int ACTION_REQUEST_PERMISSIONS = 0x001;
     // 在线激活所需的权限
@@ -22,15 +23,15 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, DisplayMainBin
             Manifest.permission.READ_PHONE_STATE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.CAMERA
     };
 
+    //是否激活人脸识别引擎
     private boolean activeEngineSuccess = false;
 
     @Override
     protected int getLayoutId() {
-        return R.layout.display_main;
+        return R.layout.activity_main;
     }
 
     @Override
@@ -129,12 +130,24 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, DisplayMainBin
         mViewModel.registerStatusPic();
     }
 
+    public void onTurnover(View view) {
+        //营业额
+        Turnover turnover = SpUtil.getTurnover();
+        if (turnover == null) {
+            showLongToast("订单数量：0个，营业额：0元");
+        } else {
+            showLongToast("订单数量：" + turnover.getOrderNumber() + "个，营业额：" + turnover.getOrderPrice() + "元");
+        }
+    }
+
     public void onSetting(View view) {
+        //设置
         Intent intent = new Intent(this, SettingActivity.class);
         startActivity(intent);
     }
 
     public void onRegister(View view) {
+        //注册人脸
         startActivity(new Intent(this, FaceManageActivity.class));
     }
 

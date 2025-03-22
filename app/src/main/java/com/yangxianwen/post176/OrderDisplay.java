@@ -13,9 +13,10 @@ import com.bumptech.glide.Glide;
 import com.yangxianwen.post176.base.BaseMvvmPresentation;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Student;
-import com.yangxianwen.post176.databinding.DisplayOrderBinding;
-import com.yangxianwen.post176.face.FaceManageActivity;
+import com.yangxianwen.post176.databinding.ActivityOrderBinding;
 import com.yangxianwen.post176.manager.LiveDataManager;
+import com.yangxianwen.post176.utils.FileUtil;
+import com.yangxianwen.post176.values.Constants;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
 
 import java.io.File;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 
-public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, DisplayOrderBinding> {
+public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityOrderBinding> {
 
     protected LiveDataManager mLiveDataManager;
 
@@ -39,7 +40,7 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, DisplayOr
 
     @Override
     protected int getLayoutId() {
-        return R.layout.display_order;
+        return R.layout.activity_order;
     }
 
     @Override
@@ -51,8 +52,6 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, DisplayOr
         initFace();
 
         initListener();
-
-        mBinding.confirmButton.setText("下一位");
     }
 
     private void initObserveForever() {
@@ -153,7 +152,7 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, DisplayOr
             for (View item : items) {
                 View selectView = item.findViewById(R.id.food_select);
                 Meal itemMeal = (Meal) item.getTag();
-                selectView.setVisibility(View.GONE);
+                selectView.setVisibility(View.INVISIBLE);
                 for (Meal meal : meals) {
                     if (Objects.equals(itemMeal.getCFoodCode(), meal.getCFoodCode())) {
                         selectView.setVisibility(View.VISIBLE);
@@ -168,7 +167,7 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, DisplayOr
     }
 
     private void initFace() {
-        String filePath = student.getCPic().replace("/Pic/StuImg", FaceManageActivity.REGISTER_DIR);
+        String filePath = student.getCPic().replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
         Glide.with(getContext()).load(new File(filePath)).into(mBinding.faceIcon);
     }
 
@@ -201,7 +200,7 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, DisplayOr
         item.setOnClickListener(v -> {
             View emptyView = v.findViewById(R.id.food_empty);
             if (mViewModel.containsMealEmpty(meal)) {
-                emptyView.setVisibility(View.GONE);
+                emptyView.setVisibility(View.INVISIBLE);
                 mViewModel.removeMealEmpty(meal);
             } else {
                 emptyView.setVisibility(View.VISIBLE);
