@@ -6,12 +6,14 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class GuideView extends FrameLayout {
+/**
+ * 触发人脸识别区域视图
+ */
+public class FacePreviewRangeView extends View {
 
     private final Paint paint;
 
@@ -26,7 +28,7 @@ public class GuideView extends FrameLayout {
     public int scannerStart = 0;
     public int scannerEnd = 0;
 
-    public GuideView(Context context, @Nullable AttributeSet attrs) {
+    public FacePreviewRangeView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         maskColor = 0x60000000;
         lineColor = 0xFFFFFFFF;
@@ -40,14 +42,11 @@ public class GuideView extends FrameLayout {
     @Override
     public void onDraw(@NonNull Canvas canvas) {
         if (frame == null) {
-            if (getChildCount() < 1) {
-                return;
-            }
-            View child = getChildAt(0);
-            if (child == null) {
-                return;
-            }
-            frame = new Rect(child.getLeft(), child.getTop(), child.getRight(), child.getBottom());
+            int left = getWidth() / 4;
+            int top = getHeight() / 4;
+            int right = left + (getWidth() / 2);
+            int bottom = top + (getHeight() / 2);
+            frame = new Rect(left, top, right, bottom);
         }
 
         if (scannerStart == 0 || scannerEnd == 0) {

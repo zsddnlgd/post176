@@ -18,7 +18,6 @@ import com.arcsoft.face.AgeInfo;
 import com.arcsoft.face.ErrorInfo;
 import com.arcsoft.face.FaceEngine;
 import com.arcsoft.face.FaceFeature;
-import com.arcsoft.face.FaceInfo;
 import com.arcsoft.face.GenderInfo;
 import com.arcsoft.face.LivenessInfo;
 import com.arcsoft.face.enums.DetectFaceOrientPriority;
@@ -56,6 +55,7 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver.OnGlobalLayoutListener {
@@ -71,6 +71,10 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
      * 失败重试间隔时间（ms）
      */
     private static final long FAIL_RETRY_INTERVAL = 1000;
+    /**
+     * 识别成功后，回调间隔（ms）
+     */
+    private static final long CALL_BACK_INTERVAL = 1000;
     /**
      * 出错重试最大次数
      */
@@ -130,6 +134,10 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
      * 绘制人脸框的控件
      */
     private FaceRectView faceRectView;
+    /**
+     * 执行识别的人脸区域
+     */
+    private Rect faceRect;
 
     /**
      * 识别阈值
@@ -367,6 +375,11 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
             public void onCameraOpened(Camera camera, int cameraId, int displayOrientation, boolean isMirror) {
                 Camera.Size lastPreviewSize = previewSize;
                 previewSize = camera.getParameters().getPreviewSize();
+                int left = previewSize.width / 4;
+                int top = previewSize.height / 4;
+                int right = left + (previewSize.width / 2);
+                int bottom = top + (previewSize.height / 2);
+                faceRect = new Rect(left, top, right, bottom);
                 drawHelper = new DrawHelper(previewSize.width, previewSize.height, previewView.getWidth(), previewView.getHeight(), displayOrientation
                         , cameraId, isMirror, false, false);
                 Log.i(TAG, "onCameraOpened: " + drawHelper.toString());
@@ -407,10 +420,10 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
 
                 if (facePreviewInfoList != null && facePreviewInfoList.size() > 0 && previewSize != null) {
                     for (int i = 0; i < facePreviewInfoList.size(); i++) {
-                        FaceInfo faceInfo = facePreviewInfoList.get(i).getFaceInfo();
-                        Log.i(TAG, "onPreview: faceInfo = " + faceInfo);
-                        Rect confineRect = new Rect(200, 150, 400, 350);
-                        if (!confineRect.contains(faceInfo.getRect())) {
+                        /**
+                         * 筛选中心位置的人脸，外侧人脸不进行识别
+                         */
+                        if (faceRect != null && !faceRect.contains(facePreviewInfoList.get(i).getFaceInfo().getRect())) {
                             continue;
                         }
 
@@ -573,13 +586,8 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
 //                        Log.i(TAG, "onNext: fr search get result  = " + System.currentTimeMillis() + " trackId = " + requestId + "  similar = " + compareResult.getSimilar());
                         if (compareResult.getSimilar() > SIMILAR_THRESHOLD) {
                             boolean isAdded = false;
-                            if (compareResultList == null) {
-                                requestFeatureStatusMap.put(requestId, RequestFeatureStatus.FAILED);
-                                faceHelper.setName(requestId, "VISITOR " + requestId);
-                                return;
-                            }
-                            for (CompareResult compareResult1 : compareResultList) {
-                                if (compareResult1.getTrackId() == requestId) {
+                            for (CompareResult result : compareResultList) {
+                                if (result.getTrackId() == requestId) {
                                     isAdded = true;
                                     break;
                                 }
@@ -600,10 +608,6 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
                             if (cameraHelper != null && !cameraHelper.isStopped()) {
                                 cameraHelper.stop();
                             }
-
-                            //清空对比结果
-                            compareResultList.clear();
-
                             //回调识别结果
                             if (mRecognizeResultListener != null) {
                                 mRecognizeResultListener.onRecognizeResult(compareResult);

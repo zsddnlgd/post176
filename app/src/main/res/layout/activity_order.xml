@@ -44,25 +44,16 @@
                 <TextureView
                     android:id="@+id/face_preview"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center" />
+                    android:layout_height="match_parent" />
 
                 <com.yangxianwen.post176.face.widget.FaceRectView
                     android:id="@+id/face_identify"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center" />
+                    android:layout_height="match_parent" />
 
-                <com.yangxianwen.post176.face.widget.GuideView
+                <com.yangxianwen.post176.face.widget.FacePreviewRangeView
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <ImageView
-                        android:layout_width="90dp"
-                        android:layout_height="100dp"
-                        android:layout_gravity="center" />
-
-                </com.yangxianwen.post176.face.widget.GuideView>
+                    android:layout_height="match_parent" />
 
                 <ImageView
                     android:id="@+id/face_icon"

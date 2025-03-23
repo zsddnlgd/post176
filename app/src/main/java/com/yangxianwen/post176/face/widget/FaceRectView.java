@@ -43,9 +43,6 @@ public class FaceRectView extends View {
         super.onDraw(canvas);
         if (!drawInfoList.isEmpty()) {
             for (int i = 0; i < drawInfoList.size(); i++) {
-                Log.i("TAG", "onDraw: faceInfo = " + drawInfoList.get(i));
-                Log.i("TAG", "onDraw: canvas = " + canvas.getWidth()+"  "+canvas.getHeight());
-                Log.i("TAG", "onDraw: " + getWidth()+"  "+getHeight());
                 DrawHelper.drawFaceRect(canvas, drawInfoList.get(i), DEFAULT_FACE_RECT_THICKNESS, paint);
             }
         }
