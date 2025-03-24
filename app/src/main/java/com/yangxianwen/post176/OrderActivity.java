@@ -17,6 +17,7 @@ import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.ActivityOrderBinding;
 import com.yangxianwen.post176.resolver.BarcodeScannerResolver;
+import com.yangxianwen.post176.utils.DoubleClickUtil;
 import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.utils.SpUtil;
@@ -33,8 +34,6 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
 
     private final ArrayList<View> items = new ArrayList<>();
 
-    private double totalPrice = 0;
-
     private BarcodeScannerResolver mBarcodeScannerResolver;
 
     private Student currentStudent = null;
@@ -48,11 +47,11 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        initObserveForever();
-
         initFaceRecognize();
 
         initBarcodeScanner();
+
+        initObserveForever();
 
         initListener();
 
@@ -155,7 +154,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             if (aBoolean) {
                 mBinding.failOrder.setVisibility(View.VISIBLE);
             } else {
-                mBinding.failOrder.setVisibility(View.GONE);
+                mBinding.failOrder.setVisibility(View.INVISIBLE);
             }
         });
 
@@ -171,7 +170,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             mBinding.sideDishContainer2.removeAllViews();
             mBinding.sideDishContainer3.removeAllViews();
             mBinding.specialMealContainer.removeAllViews();
-            mBinding.specialDishSoupContainer.removeAllViews();
+            mBinding.specialDishContainer.removeAllViews();
+            mBinding.specialSoupContainer.removeAllViews();
 
             for (Meal meal : meals) {
                 if ("主食".equals(meal.getCFoodType())) {
@@ -179,9 +179,16 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
                 } else if ("副食".equals(meal.getCFoodType())) {
                     addFood(meal, mBinding.sideDishContainer1, mBinding.sideDishContainer2, mBinding.sideDishContainer3);
                 } else if ("特色餐".equals(meal.getCFoodType())) {
+                    if ("晚餐".equals(meal.getCName())) {
+                        mBinding.specialMealTitle.setText(getResources().getString(R.string.night_snack));
+                    } else {
+                        mBinding.specialMealTitle.setText(getResources().getString(R.string.star_anis));
+                    }
                     addFood(meal, mBinding.specialMealContainer);
                 } else if ("特惠菜".equals(meal.getCFoodType())) {
-                    addFood(meal, mBinding.specialDishSoupContainer);
+                    addFood(meal, mBinding.specialDishContainer);
+                } else if ("免费汤".equals(meal.getCFoodType())) {
+                    addFood(meal, mBinding.specialSoupContainer);
                 }
             }
         });
@@ -236,9 +243,10 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         mBarcodeScannerResolver = new BarcodeScannerResolver();
         mBarcodeScannerResolver.setScanSuccessListener(barcode -> {
             if (barcode == null || barcode.length() != 17) {
+                showToast("未识别的NFC设备");
                 return;
             }
-            barcode = barcode.replace("0000000", "");
+            barcode = barcode.replaceFirst("0000000", "");
             if (currentStudent == null) {
                 Student student = SpUtil.getStudentByNfc(barcode);
                 showStudentInfo(student);
@@ -256,13 +264,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
 
     private void initListener() {
         mBinding.confirmButton.setOnClickListener(v -> {
-            if (totalPrice == 0) {
-                showToast("您还未选择任何菜品！");
-                return;
-            }
-
-            if (!mViewModel.canBuy()) {
-                showToast("您的余额不足！");
+            if (DoubleClickUtil.isDoubleClick()) {
                 return;
             }
 
@@ -310,7 +312,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
 
             View selectView = v.findViewById(R.id.food_select);
             if (mViewModel.containsMealSelect(meal)) {
-                selectView.setVisibility(View.GONE);
+                selectView.setVisibility(View.INVISIBLE);
                 mViewModel.removeMealSelect(meal);
             } else {
                 selectView.setVisibility(View.VISIBLE);
@@ -327,7 +329,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     }
 
     private void updatePrice() {
-        totalPrice = 0;
+        double totalPrice = 0;
 
         for (View item : items) {
             Meal meal = (Meal) item.getTag();

@@ -19,7 +19,6 @@ import com.yangxianwen.post176.base.BaseActivity;
 import com.yangxianwen.post176.face.faceserver.FaceServer;
 import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.NavigationBarUtil;
-import com.yangxianwen.post176.widget.ProgressDialog;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -34,16 +33,15 @@ import java.util.concurrent.Executors;
  */
 public class FaceManageActivity extends BaseActivity {
 
-    private ExecutorService executorService;
-
-    private TextView tvNotificationRegisterResult;
-
-    ProgressDialog progressDialog = null;
     private final int ACTION_REQUEST_PERMISSIONS = 0x001;
     private final String[] NEEDED_PERMISSIONS = new String[]{
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
+
+    private ExecutorService executorService;
+
+    private TextView tvNotificationRegisterResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,9 +51,6 @@ public class FaceManageActivity extends BaseActivity {
         FaceServer.getInstance().init(this);
         executorService = Executors.newSingleThreadExecutor();
         tvNotificationRegisterResult = findViewById(R.id.notification_register_result);
-        progressDialog = new ProgressDialog(this, ProgressDialog.update);
-        progressDialog.setTitleText("注册中，请稍候...");
-        progressDialog.setContentText("正在获取进度...");
     }
 
     @Override
@@ -63,10 +58,6 @@ public class FaceManageActivity extends BaseActivity {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdownNow();
         }
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
-
         FaceServer.getInstance().unInit();
         super.onDestroy();
     }
@@ -106,8 +97,7 @@ public class FaceManageActivity extends BaseActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        progressDialog.setMaxProgress(totalCount);
-                        progressDialog.show();
+                        showUpdateLoading("正在注册", "获取进度", totalCount);
                         tvNotificationRegisterResult.setText("");
                         tvNotificationRegisterResult.append(getString(R.string.batch_process_processing_please_wait));
                     }
@@ -115,9 +105,7 @@ public class FaceManageActivity extends BaseActivity {
                 for (int i = 0; i < totalCount; i++) {
                     final int finalI = i;
                     runOnUiThread(() -> {
-                        if (progressDialog != null) {
-                            progressDialog.refreshProgress(finalI);
-                        }
+                        updateLoading(-1, finalI);
                     });
                     final File jpgFile = jpgFiles[i];
                     Bitmap bitmap = BitmapFactory.decodeFile(jpgFile.getAbsolutePath());
@@ -144,7 +132,7 @@ public class FaceManageActivity extends BaseActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                progressDialog.dismiss();
+                                dismissUpdateLoading();
                                 tvNotificationRegisterResult.append("");
                             }
                         });
@@ -166,7 +154,7 @@ public class FaceManageActivity extends BaseActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        progressDialog.dismiss();
+                        dismissUpdateLoading();
                         tvNotificationRegisterResult.append(getString(R.string.batch_process_finished_info, totalCount, finalSuccessCount, totalCount - finalSuccessCount, FileUtil.REGISTER_FAILED_DIR));
                     }
                 });

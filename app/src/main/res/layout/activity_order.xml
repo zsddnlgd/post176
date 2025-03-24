@@ -67,7 +67,7 @@
                 android:id="@+id/cStudName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="30dp"
                 android:layout_marginTop="20dp"
                 android:text="@string/studName"
                 android:textColor="@color/white"
@@ -77,7 +77,7 @@
                 android:id="@+id/cClass"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="30dp"
                 android:text="@string/className"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
@@ -86,7 +86,7 @@
                 android:id="@+id/nBalance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="30dp"
                 android:text="@string/balance_n"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
@@ -95,7 +95,7 @@
                 android:id="@+id/iStep"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="30dp"
                 android:text="@string/step_number_i"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
@@ -104,7 +104,7 @@
                 android:id="@+id/iDistance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="30dp"
                 android:text="@string/distance_i"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
@@ -113,7 +113,7 @@
                 android:id="@+id/iCalorie"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="30dp"
                 android:text="@string/calorie_i"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
@@ -122,31 +122,41 @@
                 android:id="@+id/nfc_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="30dp"
                 android:text="@string/nfc_id"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:gravity="start|bottom"
+                android:orientation="horizontal">
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginBottom="5dp"
+                    android:format24Hour="yyyy-MM-dd HH:mm:ss"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
 
                 <TextView
                     android:id="@+id/fail_order"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_centerHorizontal="true"
-                    android:layout_margin="10dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginBottom="5dp"
                     android:background="@drawable/bg_round_bold"
                     android:gravity="center"
                     android:text="@string/exclamation_mark"
                     android:textColor="@color/red"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:visibility="gone" />
+                    android:visibility="invisible" />
 
-            </RelativeLayout>
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -246,6 +256,7 @@
                 android:showDividers="middle" />
 
             <TextView
+                android:id="@+id/special_meal_title"
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
@@ -272,32 +283,70 @@
                 android:orientation="horizontal"
                 android:showDividers="middle" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="10dp"
-                android:background="@color/color_main"
-                android:gravity="center_vertical"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:text="@string/special_offer_dishes"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="2.3"
+                    android:background="@color/color_main"
+                    android:gravity="center_vertical"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="@string/special_offer_dishes"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:background="@color/color_main"
+                    android:gravity="center_vertical"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="@string/free_soup"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- 特惠菜和免费汤 -->
             <LinearLayout
-                android:id="@+id/special_dish_soup_container"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
-                android:divider="@drawable/bg_snap"
-                android:gravity="bottom"
-                android:orientation="horizontal"
-                android:showDividers="middle" />
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:id="@+id/special_dish_container"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="2.3"
+                    android:divider="@drawable/bg_snap"
+                    android:gravity="bottom"
+                    android:orientation="horizontal"
+                    android:showDividers="middle" />
+
+                <LinearLayout
+                    android:id="@+id/special_soup_container"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:divider="@drawable/bg_snap"
+                    android:gravity="bottom"
+                    android:orientation="horizontal"
+                    android:showDividers="middle" />
+
+            </LinearLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"

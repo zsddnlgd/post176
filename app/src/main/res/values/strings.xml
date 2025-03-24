@@ -23,12 +23,15 @@
     <string name="staple_food">主食</string>
     <string name="side_dishes">副食</string>
     <string name="star_anis">特色餐</string>
-    <string name="special_offer_dishes">特惠菜/免费汤</string>
+    <string name="night_snack">夜宵</string>
+    <string name="special_offer_dishes">特惠菜</string>
+    <string name="free_soup">免费汤</string>
     <string name="total_amount">总金额：0.00元</string>
     <string name="device_number">本机编号</string>
     <string name="ip_address">IP地址</string>
     <string name="register_face">注册人脸</string>
     <string name="turnover">营业额</string>
+    <string name="upload_order">上传订单</string>
     <string name="sell_out">售罄</string>
     <string name="permission_denied">权限被拒绝！</string>
     <string name="ok">确认</string>

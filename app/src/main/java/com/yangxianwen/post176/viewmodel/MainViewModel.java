@@ -8,10 +8,12 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.yangxianwen.post176.base.BaseViewModel;
 import com.yangxianwen.post176.bean.Nfc;
+import com.yangxianwen.post176.bean.Order;
+import com.yangxianwen.post176.bean.Result;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.bean.StudentSports;
-import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.utils.FileUtil;
+import com.yangxianwen.post176.utils.GsonUtil;
 import com.yangxianwen.post176.utils.HttpUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.values.Constants;
@@ -19,6 +21,7 @@ import com.yangxianwen.post176.values.Constants;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +29,8 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 
 public class MainViewModel extends BaseViewModel {
@@ -80,7 +85,7 @@ public class MainViewModel extends BaseViewModel {
                     return;
                 }
 
-                studentSize.setValue(subList.size());
+                studentSize.postValue(subList.size());
 
                 //递归下载图片
                 downLoadPhoto(subList, subList.size());
@@ -217,6 +222,50 @@ public class MainViewModel extends BaseViewModel {
             public void onError(Throwable e) {
                 closeLoading.postValue(new Object());
                 syncFinish.postValue(new Object());
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+    }
+
+    public void uploadOrder() {
+        ArrayList<Order> orders = SpUtil.getOrders();
+        if (orders.isEmpty()) {
+            tips.postValue("您的订单已全部上传！");
+            closeLoading.postValue(new Object());
+            return;
+        }
+
+        HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
+        requestMap.put("requests", orders);
+        String jsonRequest = GsonUtil.objToJson(requestMap);
+
+        RequestBody body = RequestBody.create(MediaType.parse("application/json;charset=UTF-8"), jsonRequest);
+
+        HttpUtil.createOrder(body, new Observer<>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Result result) {
+                closeLoading.postValue(new Object());
+                if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
+                    SpUtil.clearOrders();
+                    tips.postValue("订单上传成功！");
+                } else {
+                    tips.postValue("订单上传失败：" + result.getMessage());
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                closeLoading.postValue(new Object());
+                tips.postValue("订单上传失败：" + e.getMessage());
             }
 
             @Override

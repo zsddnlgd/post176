@@ -124,6 +124,20 @@
             app:layout_constraintStart_toEndOf="@id/register_button" />
 
         <Button
+            android:id="@+id/upload_order"
+            android:layout_width="60dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_button"
+            android:onClick="onUploadOrder"
+            android:text="@string/upload_order"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/turnover_button" />
+
+        <Button
             android:id="@+id/exit_button"
             android:layout_width="60dp"
             android:layout_height="30dp"
@@ -135,7 +149,7 @@
             android:textColor="@color/white"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/turnover_button" />
+            app:layout_constraintStart_toEndOf="@id/upload_order" />
 
         <Button
             android:id="@+id/device_number"

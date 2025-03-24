@@ -65,6 +65,12 @@ public class OrderViewModel extends BaseViewModel {
         calorieStr = application.getResources().getString(R.string.calorie_i);
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        hasFailOrder.postValue(!SpUtil.getOrders().isEmpty());
+    }
+
     public void setStatusInfo(Student student) {
         name.setValue(nameStr + (student != null && student.getCStudName() != null ? student.getCStudName() : ""));
         className.setValue(classStr + (student != null && student.getCClass() != null ? student.getCClass() : ""));
@@ -193,14 +199,19 @@ public class OrderViewModel extends BaseViewModel {
     }
 
     public void createOrder(Student student) {
-        if (student == null) {
-            tips.postValue("学生信息为空");
+        ArrayList<Meal> meals = getMealSelectList().getValue();
+        if (meals == null || meals.isEmpty()) {
+            tips.postValue("您还未选择任何菜品！");
             closeLoading.setValue(new Object());
             return;
         }
-        ArrayList<Meal> meals = getMealSelectList().getValue();
-        if (meals == null) {
-            tips.postValue("菜单信息为空");
+        if (!canBuy()) {
+            tips.postValue("您的余额不足！");
+            closeLoading.setValue(new Object());
+            return;
+        }
+        if (student == null) {
+            tips.postValue("学生信息为空！");
             closeLoading.setValue(new Object());
             return;
         }
@@ -222,7 +233,6 @@ public class OrderViewModel extends BaseViewModel {
 
             @Override
             public void onNext(Result result) {
-                closeLoading.setValue(new Object());
                 if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
                     SpUtil.clearOrders();
                     hasFailOrder.postValue(false);
@@ -239,7 +249,6 @@ public class OrderViewModel extends BaseViewModel {
 
             @Override
             public void onError(Throwable e) {
-                closeLoading.setValue(new Object());
                 hasFailOrder.postValue(true);
                 orderResult.postValue(new Object());
 

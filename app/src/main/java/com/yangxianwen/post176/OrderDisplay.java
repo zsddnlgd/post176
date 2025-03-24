@@ -46,9 +46,9 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        initObserveForever();
-
         initFace();
+
+        initObserveForever();
 
         initListener();
     }
@@ -128,7 +128,8 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
             mBinding.sideDishContainer2.removeAllViews();
             mBinding.sideDishContainer3.removeAllViews();
             mBinding.specialMealContainer.removeAllViews();
-            mBinding.specialDishSoupContainer.removeAllViews();
+            mBinding.specialDishContainer.removeAllViews();
+            mBinding.specialSoupContainer.removeAllViews();
 
             for (Meal meal : meals) {
                 if ("主食".equals(meal.getCFoodType())) {
@@ -138,7 +139,9 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
                 } else if ("特色餐".equals(meal.getCFoodType())) {
                     addFood(meal, mBinding.specialMealContainer);
                 } else if ("特惠菜".equals(meal.getCFoodType())) {
-                    addFood(meal, mBinding.specialDishSoupContainer);
+                    addFood(meal, mBinding.specialDishContainer);
+                } else if ("免费汤".equals(meal.getCFoodType())) {
+                    addFood(meal, mBinding.specialSoupContainer);
                 }
             }
         });

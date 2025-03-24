@@ -16,6 +16,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.yangxianwen.post176.enmu.DialogType;
+import com.yangxianwen.post176.utils.DisplayUtil;
 import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.widget.ProgressDialog;
 
@@ -32,9 +34,9 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         //修改主屏密度与副屏一致
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        displayMetrics.density = 2.0f;
-        displayMetrics.scaledDensity = 2.0f;
-        displayMetrics.densityDpi = 320;
+        displayMetrics.density = DisplayUtil.density;
+        displayMetrics.scaledDensity = DisplayUtil.scaledDensity;
+        displayMetrics.densityDpi = DisplayUtil.densityDpi;
         //保持亮屏
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //锁定为启动时的方向
@@ -103,13 +105,14 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void showLoading(String text) {
         if (mProgressDialog == null) {
-            mProgressDialog = new ProgressDialog(getActivity(), ProgressDialog.loading);
+            mProgressDialog = new ProgressDialog(getActivity(), DialogType.loading);
         }
         if (mProgressDialog.isShowing()) {
-            mProgressDialog.dismiss();
+            mProgressDialog.setContentText(text);
+        } else {
+            mProgressDialog.setContentText(text);
+            mProgressDialog.show();
         }
-        mProgressDialog.setContentText(text);
-        mProgressDialog.show();
     }
 
     protected void dismissLoading() {
@@ -120,7 +123,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void showUpdateLoading(String title, String content, DialogInterface.OnDismissListener listener) {
         if (mProgressUpdateDialog == null) {
-            mProgressUpdateDialog = new ProgressDialog(this, ProgressDialog.update);
+            mProgressUpdateDialog = new ProgressDialog(this, DialogType.update);
         }
         if (mProgressUpdateDialog.isShowing()) {
             mProgressUpdateDialog.dismiss();
@@ -129,6 +132,20 @@ public abstract class BaseActivity extends AppCompatActivity {
         mProgressUpdateDialog.setTitleText(title);
         mProgressUpdateDialog.setContentText(content);
         mProgressUpdateDialog.setOnDismissListener(listener);
+        mProgressUpdateDialog.show();
+    }
+
+    protected void showUpdateLoading(String title, String content, int max) {
+        if (mProgressUpdateDialog == null) {
+            mProgressUpdateDialog = new ProgressDialog(this, DialogType.update);
+        }
+        if (mProgressUpdateDialog.isShowing()) {
+            mProgressUpdateDialog.dismiss();
+        }
+        mProgressUpdateDialog.setMaxProgress(max);
+        mProgressUpdateDialog.setProgress(0);
+        mProgressUpdateDialog.setTitleText(title);
+        mProgressUpdateDialog.setContentText(content);
         mProgressUpdateDialog.show();
     }
 

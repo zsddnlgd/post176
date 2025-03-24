@@ -10,6 +10,8 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.yangxianwen.post176.utils.DisplayUtil;
+
 /**
  * 触发人脸识别区域视图
  */
@@ -42,11 +44,7 @@ public class FacePreviewRangeView extends View {
     @Override
     public void onDraw(@NonNull Canvas canvas) {
         if (frame == null) {
-            int left = getWidth() / 4;
-            int top = getHeight() / 4;
-            int right = left + (getWidth() / 2);
-            int bottom = top + (getHeight() / 2);
-            frame = new Rect(left, top, right, bottom);
+            frame = DisplayUtil.getFaceIdentifyRect(getWidth(), getHeight());
         }
 
         if (scannerStart == 0 || scannerEnd == 0) {

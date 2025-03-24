@@ -1,59 +1,31 @@
 package com.yangxianwen.post176.utils;
 
-import android.app.Activity;
-import android.app.Application;
-import android.content.ComponentCallbacks;
-import android.content.Context;
-import android.content.res.Configuration;
-import android.util.DisplayMetrics;
-import android.view.Display;
-
-import androidx.annotation.NonNull;
+import android.graphics.Rect;
 
 public class DisplayUtil {
 
-    //基础dp
-    private static final float baseDp = 1336f;
+    public static final float density = 2.0f;
+    public static final float scaledDensity = 2.0f;
+    public static final int densityDpi = 320;
 
-    private static float sNonCompatDensity;
-    private static float sNonCompatScaledDensity;
+    public static final float widthMargin = 0.2f;
+    public static final float heightMargin = 0.2f;
+
+    public static Rect getFaceIdentifyRect(int width, int height) {
+        int left = (int) (width * DisplayUtil.widthMargin);
+        int top = (int) (height * DisplayUtil.heightMargin);
+        int right = width - left;
+        int bottom = height - top;
+        return new Rect(left, top, right, bottom);
+    }
 
     /**
-     * 修改设备密度
+     * 将dp转换为px
+     *
+     * @param dpValue dp值
+     * @return px值
      */
-    public static void setCustomDensity(DisplayMetrics displayMetrics, final Application application) {
-        if (displayMetrics == null || application == null) return;
-
-        DisplayMetrics appDisplayMetrics = application.getResources().getDisplayMetrics();
-        if (sNonCompatDensity == 0) {
-            sNonCompatDensity = appDisplayMetrics.density;
-            sNonCompatScaledDensity = appDisplayMetrics.scaledDensity;
-            // 防止系统切换后不起作用
-            application.registerComponentCallbacks(new ComponentCallbacks() {
-                @Override
-                public void onConfigurationChanged(@NonNull Configuration newConfig) {
-                    if (newConfig.fontScale > 0) {
-                        sNonCompatScaledDensity = application.getResources().getDisplayMetrics().scaledDensity;
-                    }
-                }
-
-                @Override
-                public void onLowMemory() {
-
-                }
-            });
-        }
-        float targetDensity = appDisplayMetrics.widthPixels / baseDp;
-        // 防止字体变小
-        float targetScaleDensity = targetDensity * (sNonCompatScaledDensity / sNonCompatDensity);
-        int targetDensityDpi = (int) (160 * targetDensity);
-
-        appDisplayMetrics.density = targetDensity;
-        appDisplayMetrics.scaledDensity = targetScaleDensity;
-        appDisplayMetrics.densityDpi = targetDensityDpi;
-
-        displayMetrics.density = targetDensity;
-        displayMetrics.scaledDensity = targetScaleDensity;
-        displayMetrics.densityDpi = targetDensityDpi;
+    public static int dpToPx(float dpValue) {
+        return (int) (dpValue * density + 0.5f);
     }
 }

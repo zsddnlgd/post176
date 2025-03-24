@@ -39,6 +39,7 @@ import com.yangxianwen.post176.face.util.face.RequestFeatureStatus;
 import com.yangxianwen.post176.face.util.face.RequestLivenessStatus;
 import com.yangxianwen.post176.face.widget.FaceRectView;
 import com.yangxianwen.post176.interfaca.OnRecognizeResultListener;
+import com.yangxianwen.post176.utils.DisplayUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 
 import java.util.ArrayList;
@@ -55,7 +56,6 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver.OnGlobalLayoutListener {
@@ -375,11 +375,7 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
             public void onCameraOpened(Camera camera, int cameraId, int displayOrientation, boolean isMirror) {
                 Camera.Size lastPreviewSize = previewSize;
                 previewSize = camera.getParameters().getPreviewSize();
-                int left = previewSize.width / 4;
-                int top = previewSize.height / 4;
-                int right = left + (previewSize.width / 2);
-                int bottom = top + (previewSize.height / 2);
-                faceRect = new Rect(left, top, right, bottom);
+                faceRect = DisplayUtil.getFaceIdentifyRect(previewSize.width, previewSize.height);
                 drawHelper = new DrawHelper(previewSize.width, previewSize.height, previewView.getWidth(), previewView.getHeight(), displayOrientation
                         , cameraId, isMirror, false, false);
                 Log.i(TAG, "onCameraOpened: " + drawHelper.toString());

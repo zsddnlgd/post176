@@ -136,7 +136,7 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBi
     }
 
     public void onUpdate(View view) {
-        showUpdateLoading("更新中，请稍候...", "正在获取进度...", dialog -> {
+        showUpdateLoading("正在更新", "获取进度...", dialog -> {
             //取消下载
             mViewModel.cancelDownload();
         });
@@ -152,6 +152,12 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBi
         } else {
             showLongToast("订单数量：" + turnover.getOrderNumber() + "个，营业额：" + turnover.getOrderPrice() + "元");
         }
+    }
+
+    public void onUploadOrder(View view) {
+        //上传订单
+        showLoading("正在上传订单...");
+        mViewModel.uploadOrder();
     }
 
     public void onSetting(View view) {

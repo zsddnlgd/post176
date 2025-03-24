@@ -5,47 +5,42 @@ import android.content.Context;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.widget.LinearLayout;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
 import com.yangxianwen.post176.R;
+import com.yangxianwen.post176.enmu.DialogType;
 import com.yangxianwen.post176.utils.NavigationBarUtil;
 
 
 public class ProgressDialog extends AlertDialog {
 
-    public static final int update = 1;
-    public static final int loading = 2;
-
     private ProgressBar progressBar;
     private TextView tvProgress;
+    private TextView tvTitle;
     private int maxProgress;
 
-    public ProgressDialog(@NonNull Context context, int type) {
+    public ProgressDialog(@NonNull Context context, DialogType type) {
         super(context, R.style.DialogTheme);
-        if (type == update) {
-            progressBar = (ProgressBar) LayoutInflater.from(context).inflate(R.layout.dialog_horizontal_progress_bar, null);
+        if (type == DialogType.update) {
+            View view = LayoutInflater.from(context).inflate(R.layout.dialog_horizontal_progress_bar, new FrameLayout(context), true);
+            progressBar = view.findViewById(R.id.progress);
             progressBar.getProgressDrawable().setColorFilter(getContext().getResources().getColor(R.color.color_main), PorterDuff.Mode.SRC_IN);
-            tvProgress = new TextView(context);
-            LinearLayout linearLayout = new LinearLayout(context);
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-            linearLayout.addView(progressBar);
-            linearLayout.addView(tvProgress);
-            setView(linearLayout, 50, 20, 50, 50);
+            tvProgress = view.findViewById(R.id.tips);
+            tvTitle = view.findViewById(R.id.title);
+            setView(view);
             setCanceledOnTouchOutside(false);
             setCancelable(false);
-        } else if (type == loading) {
-            progressBar = (ProgressBar) LayoutInflater.from(context).inflate(R.layout.dialog_progress_bar, null);
+        } else if (type == DialogType.loading) {
+            View view = LayoutInflater.from(context).inflate(R.layout.dialog_progress_bar, new FrameLayout(context), true);
+            progressBar = view.findViewById(R.id.progress);
             progressBar.getIndeterminateDrawable().setColorFilter(getContext().getResources().getColor(R.color.color_main), PorterDuff.Mode.SRC_IN);
-            tvProgress = new TextView(context);
-            LinearLayout linearLayout = new LinearLayout(context);
-            linearLayout.setOrientation(LinearLayout.VERTICAL);
-            linearLayout.addView(progressBar);
-            linearLayout.addView(tvProgress);
-            setView(linearLayout, 50, 50, 50, 50);
+            tvProgress = view.findViewById(R.id.tips);
+            setView(view);
             setCanceledOnTouchOutside(false);
             setCancelable(false);
         }
@@ -58,7 +53,9 @@ public class ProgressDialog extends AlertDialog {
     }
 
     public void setTitleText(String titleText) {
-        setTitle(titleText);
+        if (tvTitle != null) {
+            tvTitle.setText(titleText);
+        }
     }
 
     public void setContentText(String contentText) {
@@ -73,7 +70,6 @@ public class ProgressDialog extends AlertDialog {
             }
         }
     }
-
 
     public void refreshProgress(int progress) {
         if (progressBar != null) {
