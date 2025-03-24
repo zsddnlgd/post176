@@ -1,5 +1,6 @@
 package com.yangxianwen.post176;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -17,6 +18,7 @@ import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.ActivityOrderBinding;
 import com.yangxianwen.post176.resolver.BarcodeScannerResolver;
 import com.yangxianwen.post176.utils.FileUtil;
+import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
 
@@ -84,9 +86,16 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     }
 
     private void initObserveForever() {
-        mLiveDataManager.observeForever(mViewModel.getFinish(), o -> {
-            if (o != null) {
-                finish();
+        mLiveDataManager.observeForever(mViewModel.getFinish(), s -> {
+            if (s != null) {
+                AlertDialog alertDialog = new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                        .setTitle(R.string.batch_process_notification)
+                        .setMessage(s)
+                        .setPositiveButton(R.string.ok, (dialog, which) -> finish())
+                        .setCancelable(false)
+                        .create();
+                NavigationBarUtil.hideNavigationBar(alertDialog.getWindow());
+                alertDialog.show();
             }
         });
 
@@ -292,12 +301,10 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         TextView price = item.findViewById(R.id.food_price);
         name.setText(meal.getCFoodName());
         price.setText(String.format(Locale.getDefault(), "%.2f元", meal.getNSum()));
-        layout.addView(item);
 
-        item.setSelected(false);
         item.setTag(meal);
         item.setOnClickListener(v -> {
-            if (!mViewModel.canPick()) {
+            if (mViewModel.cantPick()) {
                 return;
             }
 
@@ -314,6 +321,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             //更新卡路里建议
             updateCalorie();
         });
+
+        layout.addView(item);
         items.add(item);
     }
 

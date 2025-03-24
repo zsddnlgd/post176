@@ -2,6 +2,7 @@ package com.yangxianwen.post176.widget;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
@@ -27,6 +28,7 @@ public class ProgressDialog extends AlertDialog {
         super(context, R.style.DialogTheme);
         if (type == update) {
             progressBar = (ProgressBar) LayoutInflater.from(context).inflate(R.layout.dialog_horizontal_progress_bar, null);
+            progressBar.getProgressDrawable().setColorFilter(getContext().getResources().getColor(R.color.color_main), PorterDuff.Mode.SRC_IN);
             tvProgress = new TextView(context);
             LinearLayout linearLayout = new LinearLayout(context);
             linearLayout.setOrientation(LinearLayout.VERTICAL);
@@ -37,6 +39,7 @@ public class ProgressDialog extends AlertDialog {
             setCancelable(false);
         } else if (type == loading) {
             progressBar = (ProgressBar) LayoutInflater.from(context).inflate(R.layout.dialog_progress_bar, null);
+            progressBar.getIndeterminateDrawable().setColorFilter(getContext().getResources().getColor(R.color.color_main), PorterDuff.Mode.SRC_IN);
             tvProgress = new TextView(context);
             LinearLayout linearLayout = new LinearLayout(context);
             linearLayout.setOrientation(LinearLayout.VERTICAL);

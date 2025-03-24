@@ -18,7 +18,7 @@ import com.yangxianwen.post176.R;
 import com.yangxianwen.post176.base.BaseActivity;
 import com.yangxianwen.post176.face.faceserver.FaceServer;
 import com.yangxianwen.post176.utils.FileUtil;
-import com.yangxianwen.post176.values.Constants;
+import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.widget.ProgressDialog;
 
 import java.io.File;
@@ -196,16 +196,18 @@ public class FaceManageActivity extends BaseActivity {
         if (faceNum == 0) {
             showToast(getString(R.string.batch_process_no_face_need_to_delete));
         } else {
-            AlertDialog dialog = new AlertDialog.Builder(this)
+            AlertDialog alertDialog = new AlertDialog.Builder(this, R.style.AlertDialogTheme)
                     .setTitle(R.string.batch_process_notification)
                     .setMessage(getString(R.string.batch_process_confirm_delete, faceNum))
-                    .setPositiveButton(R.string.ok, (dialog1, which) -> {
+                    .setPositiveButton(R.string.ok, (dialog, which) -> {
                         int deleteCount = FaceServer.getInstance().clearAllFaces(FaceManageActivity.this);
-                        showToast(deleteCount + " faces cleared!");
+                        showToast(deleteCount + "张人脸被清除");
                     })
                     .setNegativeButton(R.string.cancel, null)
+                    .setCancelable(false)
                     .create();
-            dialog.show();
+            NavigationBarUtil.hideNavigationBar(alertDialog.getWindow());
+            alertDialog.show();
         }
     }
 

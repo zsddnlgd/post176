@@ -190,11 +190,11 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
         View item = LayoutInflater.from(getContext()).inflate(R.layout.item_food, new FrameLayout(getContext()), false);
         TextView name = item.findViewById(R.id.food_name);
         TextView price = item.findViewById(R.id.food_price);
+        View empty = item.findViewById(R.id.food_empty);
         name.setText(meal.getCFoodName());
         price.setText(String.format(Locale.getDefault(), "%.2f元", meal.getNSum()));
-        layout.addView(item);
+        empty.setVisibility(mViewModel.containsMealEmpty(meal) ? View.VISIBLE : View.INVISIBLE);
 
-        item.setSelected(false);
         item.setTag(meal);
         item.setOnClickListener(v -> {
             View emptyView = v.findViewById(R.id.food_empty);
@@ -206,6 +206,8 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
                 mViewModel.addMealEmpty(meal);
             }
         });
+
+        layout.addView(item);
         items.add(item);
     }
 

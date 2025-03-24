@@ -33,7 +33,7 @@ public class OrderViewModel extends BaseViewModel {
 
     private final MutableLiveData<OrderStatus> orderStatus = new MutableLiveData<>(OrderStatus.identify);
     private final MutableLiveData<Object> orderResult = new MutableLiveData<>();
-    private final MutableLiveData<Object> finish = new MutableLiveData<>();
+    private final MutableLiveData<String> finish = new MutableLiveData<>();
     private final MutableLiveData<String> name = new MutableLiveData<>();
     private final MutableLiveData<String> className = new MutableLiveData<>();
     private final MutableLiveData<String> balance = new MutableLiveData<>();
@@ -110,8 +110,7 @@ public class OrderViewModel extends BaseViewModel {
                     }
                 }
                 if (subList.isEmpty()) {
-                    tips.postValue("当前不在开餐时间");
-                    finish.postValue(new Object());
+                    finish.postValue("当前不在开餐时间");
                     return;
                 }
                 mealList.postValue(subList);
@@ -123,7 +122,7 @@ public class OrderViewModel extends BaseViewModel {
 
                 ArrayList<Meal> meals = SpUtil.getMeal();
                 if (meals == null || meals.isEmpty()) {
-                    tips.postValue("未获取到菜单数据，请联网后再试");
+                    finish.postValue("未获取到菜单数据，请联网后再试");
                     return;
                 }
 
@@ -131,13 +130,12 @@ public class OrderViewModel extends BaseViewModel {
                 for (Meal meal : meals) {
                     String start = meal.getCDate() + meal.getCStartTime();
                     String end = meal.getCDate() + meal.getCEndTime();
-                    if (TimeUtil.inTime(start, end, "yyyy-MM-ddHH:mm")) {
+                    if (TimeUtil.inTime(start, end, "yyyyMMddHH:mm")) {
                         subList.add(meal);
                     }
                 }
                 if (subList.isEmpty()) {
-                    tips.postValue("当前不在开餐时间");
-                    finish.postValue(new Object());
+                    finish.postValue("当前不在开餐时间");
                     return;
                 }
                 mealList.postValue(subList);
@@ -430,15 +428,15 @@ public class OrderViewModel extends BaseViewModel {
         return false;
     }
 
-    public boolean canPick() {
-        return orderStatus.getValue() == OrderStatus.pick;
+    public boolean cantPick() {
+        return orderStatus.getValue() != OrderStatus.pick;
     }
 
     public MutableLiveData<Object> getOrderResult() {
         return orderResult;
     }
 
-    public MutableLiveData<Object> getFinish() {
+    public MutableLiveData<String> getFinish() {
         return finish;
     }
 
