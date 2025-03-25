@@ -240,7 +240,6 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         mBarcodeScannerResolver = new BarcodeScannerResolver();
         mBarcodeScannerResolver.setScanSuccessListener(barcode -> {
             if (barcode == null || barcode.length() != 17) {
-                showToast("未识别的NFC设备");
                 return;
             }
             barcode = barcode.replaceFirst("0000000", "");
