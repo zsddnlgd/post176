@@ -1,7 +1,6 @@
 package com.yangxianwen.post176.base;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.hardware.display.DisplayManager;
@@ -121,7 +120,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
-    protected void showUpdateLoading(String title, String content, DialogInterface.OnDismissListener listener) {
+    protected void showUpdateLoading(String title, String content) {
         if (mProgressUpdateDialog == null) {
             mProgressUpdateDialog = new ProgressDialog(this, DialogType.update);
         }
@@ -131,7 +130,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         mProgressUpdateDialog.setProgress(0);
         mProgressUpdateDialog.setTitleText(title);
         mProgressUpdateDialog.setContentText(content);
-        mProgressUpdateDialog.setOnDismissListener(listener);
         mProgressUpdateDialog.show();
     }
 

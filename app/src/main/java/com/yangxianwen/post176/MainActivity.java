@@ -136,10 +136,7 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBi
     }
 
     public void onUpdate(View view) {
-        showUpdateLoading("正在更新", "获取进度...", dialog -> {
-            //取消下载
-            mViewModel.cancelDownload();
-        });
+        showUpdateLoading("正在更新", "获取进度...");
         //注册学生图片
         mViewModel.registerStatusPic();
     }

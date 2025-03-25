@@ -38,15 +38,16 @@ public class MainViewModel extends BaseViewModel {
     private final MutableLiveData<Integer> studentSize = new MutableLiveData<>();
     private final MutableLiveData<Integer> studentProgress = new MutableLiveData<>();
     private final MutableLiveData<Object> syncFinish = new MutableLiveData<>();
-
-    private boolean canDownload;
+    private int successNumber;
+    private int failNumber;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
     }
 
     public void registerStatusPic() {
-        canDownload = true;
+        successNumber = 0;
+        failNumber = 0;
         HttpUtil.getStudent(new Observer<>() {
             @Override
             public void onSubscribe(Disposable d) {
@@ -116,6 +117,8 @@ public class MainViewModel extends BaseViewModel {
 
             @Override
             public void onNext(ResponseBody responseBody) {
+                successNumber++;
+
                 boolean result = FileUtil.savePhoto(filePath, responseBody.byteStream());
                 if (!result) {
                     Log.e(TAG, "savePhoto fail");
@@ -124,7 +127,9 @@ public class MainViewModel extends BaseViewModel {
                 students.remove(0);
                 studentProgress.postValue(size - students.size());
 
-                if (!students.isEmpty() && canDownload) {
+                if (students.isEmpty()) {
+                    tips.postValue("下载图片完成：成功" + successNumber + "个，" + "失败" + failNumber + "个");
+                } else {
                     Observable.timer(300, TimeUnit.MILLISECONDS)
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
@@ -134,12 +139,16 @@ public class MainViewModel extends BaseViewModel {
 
             @Override
             public void onError(Throwable e) {
+                failNumber++;
+
                 Log.e(TAG, "downloadPhoto fail message = " + e.getMessage());
 
                 students.remove(0);
                 studentProgress.postValue(size - students.size());
 
-                if (!students.isEmpty() || !canDownload) {
+                if (students.isEmpty()) {
+                    tips.postValue("下载图片完成：成功" + successNumber + "个，" + "失败" + failNumber + "个");
+                } else {
                     Observable.timer(300, TimeUnit.MILLISECONDS)
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
@@ -273,10 +282,6 @@ public class MainViewModel extends BaseViewModel {
 
             }
         });
-    }
-
-    public synchronized void cancelDownload() {
-        canDownload = false;
     }
 
     public MutableLiveData<Integer> getStudentSize() {
