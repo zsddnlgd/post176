@@ -137,6 +137,11 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
                 } else if ("副食".equals(meal.getCFoodType())) {
                     addFood(meal, mBinding.sideDishContainer1, mBinding.sideDishContainer2, mBinding.sideDishContainer3);
                 } else if ("特色餐".equals(meal.getCFoodType())) {
+                    if ("晚餐".equals(meal.getCName())) {
+                        mBinding.specialMealTitle.setText(getResources().getString(R.string.night_snack));
+                    } else {
+                        mBinding.specialMealTitle.setText(getResources().getString(R.string.star_anis));
+                    }
                     addFood(meal, mBinding.specialMealContainer);
                 } else if ("特惠菜".equals(meal.getCFoodType())) {
                     addFood(meal, mBinding.specialDishContainer);
@@ -174,7 +179,8 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
     }
 
     private void initListener() {
-        mBinding.nextButton.setOnClickListener(v -> {
+        mBinding.confirmButton.setOnClickListener(v -> {
+            v.setClickable(false);
             mLiveDataManager.clearAllObservers();
             dismiss();
         });
@@ -186,8 +192,10 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
             layout = linearLayouts[0];
         } else if (linearLayouts.length > 1 && linearLayouts[1].getChildCount() < 3) {
             layout = linearLayouts[1];
-        } else {
+        } else if (linearLayouts.length > 2) {
             layout = linearLayouts[2];
+        } else {
+            return;
         }
 
         View item = LayoutInflater.from(getContext()).inflate(R.layout.item_food, new FrameLayout(getContext()), false);
@@ -233,6 +241,8 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
 
     public void onSelectConfirm() {
         mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元，请打餐！", totalPrice));
-        mBinding.nextButton.setVisibility(View.VISIBLE);
+        mBinding.confirmButton.setText(getResources().getString(R.string.next));
+        mBinding.confirmButton.setClickable(true);
+        mBinding.confirmButton.setVisibility(View.VISIBLE);
     }
 }

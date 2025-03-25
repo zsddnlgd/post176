@@ -1,12 +1,11 @@
 package com.yangxianwen.post176.utils;
 
-import static com.arcsoft.face.enums.DetectFaceOrientPriority.ASF_OP_ALL_OUT;
-
 import android.content.Context;
 
 import com.arcsoft.face.ActiveFileInfo;
 import com.arcsoft.face.ErrorInfo;
 import com.arcsoft.face.FaceEngine;
+import com.arcsoft.face.enums.DetectFaceOrientPriority;
 import com.yangxianwen.post176.App;
 import com.yangxianwen.post176.face.common.Constants;
 import com.yangxianwen.post176.face.util.ConfigUtil;
@@ -28,9 +27,10 @@ public class ActiveUtil {
     //所需的动态库文件
     private static final String[] LIBRARIES = new String[]{
             // 人脸相关
-            "libarcsoft_face_engine.so", "libarcsoft_face.so",
+            "libarcsoft_face_engine.so",
+            "libarcsoft_face.so",
             // 图像库相关
-            "libarcsoft_image_util.so",};
+            "libarcsoft_image_util.so"};
 
     /**
      * 激活人脸识别引擎
@@ -56,8 +56,6 @@ public class ActiveUtil {
                     case ErrorInfo.MOK:
                     case ErrorInfo.MERR_ASF_ALREADY_ACTIVATED:
                         listener.onActiveResult(true);
-                        //设置全角度识别，否则可能会识别失败
-                        ConfigUtil.setFtOrient(context, ASF_OP_ALL_OUT);
                         break;
                     default:
                         listener.onActiveResult(false);
@@ -102,5 +100,4 @@ public class ActiveUtil {
         }
         return exists;
     }
-
 }

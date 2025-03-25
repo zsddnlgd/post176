@@ -16,8 +16,8 @@ import com.yangxianwen.post176.base.BaseMvvmActivity;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.ActivityOrderBinding;
+import com.yangxianwen.post176.enmu.OrderStatus;
 import com.yangxianwen.post176.resolver.BarcodeScannerResolver;
-import com.yangxianwen.post176.utils.DoubleClickUtil;
 import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.utils.SpUtil;
@@ -226,9 +226,6 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     private void initFaceRecognize() {
         mBinding.face.initView();
         mBinding.face.setRecognizeResultListener(result -> {
-            if (result == null) {
-                return;
-            }
             Student student = SpUtil.getStudentByPic(String.format("/Pic/StuImg/%s.jpg", result.getUserName()));
             showStudentInfo(student);
         });
@@ -264,15 +261,33 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
 
     private void initListener() {
         mBinding.confirmButton.setOnClickListener(v -> {
-            if (DoubleClickUtil.isDoubleClick()) {
+            v.setClickable(false);
+
+            if (currentStudent == null) {
+                showToast("学生信息为空！");
+                v.setClickable(true);
+                return;
+            }
+            ArrayList<Meal> meals = mViewModel.getMealSelectList().getValue();
+            if (meals == null || meals.isEmpty()) {
+                showToast("您还未选择任何菜品！");
+                v.setClickable(true);
+                return;
+            }
+            double studentBalance = mViewModel.getStudentBalance();
+            if (studentBalance < 0) {
+                showToast("您的余额不足！");
+                v.setClickable(true);
                 return;
             }
 
-            showLoading("正在创建订单...");
-            mViewModel.createOrder(currentStudent);
-            mViewModel.saveTurnover();
+            showLoading("正在打餐，请等待...");
+            orderDisplay.onSelectConfirm();
+
+            mViewModel.createLocalOrder(currentStudent, studentBalance, meals);
         });
         mBinding.nextButton.setOnClickListener(v -> {
+            v.setClickable(false);
             //取消打餐
             orderDisplay.dismiss();
         });
@@ -294,8 +309,10 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             layout = linearLayouts[0];
         } else if (linearLayouts.length > 1 && linearLayouts[1].getChildCount() < 3) {
             layout = linearLayouts[1];
-        } else {
+        } else if (linearLayouts.length > 2) {
             layout = linearLayouts[2];
+        } else {
+            return;
         }
 
         View item = LayoutInflater.from(getActivity()).inflate(R.layout.item_food, new FrameLayout(getActivity()), false);
@@ -376,13 +393,14 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     private void orderFinish() {
         currentStudent = null;
 
-        Glide.with(getActivity()).load(android.R.color.transparent).into(mBinding.faceIcon);
         mBinding.face.reStart();
+        Glide.with(getActivity()).load(R.color.transparent).into(mBinding.faceIcon);
 
+        mViewModel.getOrderStatus().setValue(OrderStatus.identify);
         mViewModel.clearStatusInfo();
 
-        mBinding.confirmButton.setVisibility(View.GONE);
-        mBinding.nextButton.setVisibility(View.GONE);
+        mBinding.confirmButton.setVisibility(View.INVISIBLE);
+        mBinding.nextButton.setVisibility(View.INVISIBLE);
 
         mViewModel.getMealSelectList().setValue(new ArrayList<>());
         for (View item : items) {
@@ -414,16 +432,21 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         String filePath = student.getCPic().replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
         Glide.with(getActivity()).load(new File(filePath)).into(mBinding.faceIcon);
 
-        mViewModel.setStatusInfo(student);
+        mViewModel.getOrderStatus().setValue(OrderStatus.pick);
+        mViewModel.showStatusInfo(student);
 
+        mBinding.confirmButton.setClickable(true);
+        mBinding.nextButton.setClickable(true);
         mBinding.confirmButton.setVisibility(View.VISIBLE);
         mBinding.nextButton.setVisibility(View.VISIBLE);
 
+        //更新总价
+        updatePrice();
         //更新卡路里建议
         updateCalorie();
-        //实时查询余额
-        getBalance(student);
         //显示副屏
         showPresentation(student);
+        //实时查询余额
+        getBalance(student);
     }
 }

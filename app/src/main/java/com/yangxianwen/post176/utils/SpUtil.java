@@ -16,6 +16,7 @@ import com.yangxianwen.post176.values.Urls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Set;
 
 public class SpUtil {
 
@@ -147,26 +148,6 @@ public class SpUtil {
         return null;
     }
 
-    public static void setStudentNfc(Student student) {
-        if (student == null) {
-            return;
-        }
-        SharedPreferences sp = App.getIns().getSharedPreferences("StudentInfo", Context.MODE_PRIVATE);
-        String json = sp.getString(studentKey, null);
-        if (json == null) {
-            return;
-        }
-        ArrayList<Student> students = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Student>>() {
-        }.getType());
-        for (Student tempStudent : students) {
-            if (Objects.equals(student.getCStudCode(), tempStudent.getCStudCode())) {
-                tempStudent.setNfcId(student.getNfcId());
-                break;
-            }
-        }
-        putStudent(students);
-    }
-
     public static void setStudentNfc(ArrayList<Nfc> nfcs) {
         if (nfcs == null) {
             return;
@@ -189,7 +170,7 @@ public class SpUtil {
         putStudent(students);
     }
 
-    public static void setStudentBalance(Student student) {
+    public static void setStudent(Student student) {
         if (student == null) {
             return;
         }
@@ -200,13 +181,13 @@ public class SpUtil {
         }
         ArrayList<Student> students = GsonUtil.getGson().fromJson(json, new TypeToken<ArrayList<Student>>() {
         }.getType());
-        for (Student tempStudent : students) {
-            if (Objects.equals(student.getCStudCode(), tempStudent.getCStudCode())) {
-                tempStudent.setNBalance(student.getNBalance());
+        for (int i = 0; i < students.size(); i++) {
+            if (Objects.equals(student.getCStudCode(), students.get(i).getCStudCode())) {
+                students.set(i, student);
                 break;
             }
         }
-        putStudent(students);
+        sp.edit().putString(studentKey, GsonUtil.objToJson(students)).apply();
     }
 
     public static void putMeal(ArrayList<Meal> meals) {
@@ -224,12 +205,24 @@ public class SpUtil {
         }.getType());
     }
 
-    public static void putOrders(ArrayList<Order> orders) {
-        if (orders.isEmpty()) {
+    public static void putOrders(String key, ArrayList<Order> orders) {
+        if (orders == null || orders.isEmpty()) {
             return;
         }
         SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
-        sp.edit().putString(orderKey + "_" + orders.get(0).getCBillCode(), GsonUtil.getGson().toJson(orders)).apply();
+        sp.edit().putString(orderKey + "_" + key, GsonUtil.getGson().toJson(orders)).apply();
+    }
+
+    public static void removeOrders(Set<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        for (String key : keys) {
+            editor.remove(key);
+        }
+        editor.apply();
     }
 
     public static ArrayList<Order> getOrders() {
@@ -247,6 +240,23 @@ public class SpUtil {
             }
         }
         return orders;
+    }
+
+    public static HashMap<String, ArrayList<Order>> getUploadOrders() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(order, Context.MODE_PRIVATE);
+        HashMap<String, ArrayList<Order>> orderMap = new HashMap<>();
+        if (sp.getAll() == null) {
+            return orderMap;
+        }
+        HashMap<String, ?> map = (HashMap<String, ?>) sp.getAll();
+        for (String key : map.keySet()) {
+            ArrayList<Order> list = GsonUtil.getGson().fromJson((String) map.get(key), new TypeToken<ArrayList<Order>>() {
+            }.getType());
+            if (list != null) {
+                orderMap.put(key, list);
+            }
+        }
+        return orderMap;
     }
 
     public static void clearOrders() {

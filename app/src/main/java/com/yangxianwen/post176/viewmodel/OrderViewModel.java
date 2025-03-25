@@ -1,6 +1,7 @@
 package com.yangxianwen.post176.viewmodel;
 
 import android.app.Application;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
@@ -23,6 +24,7 @@ import com.yangxianwen.post176.values.Constants;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Set;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -45,7 +47,6 @@ public class OrderViewModel extends BaseViewModel {
     private final MutableLiveData<ArrayList<Meal>> mealSelectList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<Meal>> mealEmptyList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> hasFailOrder = new MutableLiveData<>(false);
-    private double studentBalance = 0;
     private final String nameStr;
     private final String classStr;
     private final String balanceStr;
@@ -71,7 +72,7 @@ public class OrderViewModel extends BaseViewModel {
         hasFailOrder.postValue(!SpUtil.getOrders().isEmpty());
     }
 
-    public void setStatusInfo(Student student) {
+    public void showStatusInfo(Student student) {
         name.setValue(nameStr + (student != null && student.getCStudName() != null ? student.getCStudName() : ""));
         className.setValue(classStr + (student != null && student.getCClass() != null ? student.getCClass() : ""));
         balance.setValue(balanceStr + (student != null ? student.getNBalance() : "0.0"));
@@ -80,7 +81,6 @@ public class OrderViewModel extends BaseViewModel {
         stepNumber.setValue(stepStr + (sports != null ? sports.getIStepNumber() : "0"));
         distance.setValue(distanceStr + (sports != null ? sports.getIDistance() : "0"));
         calorie.setValue(calorieStr + (sports != null ? sports.getNCalorie() : "0.0"));
-        orderStatus.setValue(OrderStatus.pick);
     }
 
     public void clearStatusInfo() {
@@ -91,7 +91,6 @@ public class OrderViewModel extends BaseViewModel {
         stepNumber.setValue(stepStr);
         distance.setValue(distanceStr);
         calorie.setValue(calorieStr);
-        orderStatus.setValue(OrderStatus.identify);
     }
 
     public void getMeal() {
@@ -162,16 +161,12 @@ public class OrderViewModel extends BaseViewModel {
             }
 
             @Override
-            public void onNext(Balance result) {
-                if (result == null) {
-                    return;
-                }
-
+            public void onNext(Balance balance) {
                 closeLoading.setValue(new Object());
-                balance.postValue(balanceStr + result.getNBalance());
 
-                student.setNBalance(result.getNBalance());
-                SpUtil.setStudentBalance(student);
+                student.setNBalance(balance.getNBalance());
+                SpUtil.setStudent(student);
+                showStatusInfo(student);
             }
 
             @Override
@@ -186,86 +181,32 @@ public class OrderViewModel extends BaseViewModel {
         });
     }
 
-    public void saveTurnover() {
-        ArrayList<Meal> meals = getMealSelectList().getValue();
+    public double getAllBalance(ArrayList<Meal> meals) {
         if (meals == null) {
-            return;
+            return 0;
         }
         double allBalance = 0;
         for (Meal meal : meals) {
             allBalance += meal.getNSum();
         }
+        return allBalance;
+    }
+
+    public void createLocalOrder(Student student, double studentBalance, ArrayList<Meal> meals) {
+        Pair<String, ArrayList<Order>> newOrder = getNewOrder(student, meals);
+        SpUtil.putOrders(newOrder.first, newOrder.second);
+
+        double allBalance = getAllBalance(meals);
         SpUtil.setTurnover(allBalance);
+
+        student.setNBalance(studentBalance);
+        SpUtil.setStudent(student);
+        showStatusInfo(student);
+
+        uploadOrders();
     }
 
-    public void createOrder(Student student) {
-        ArrayList<Meal> meals = getMealSelectList().getValue();
-        if (meals == null || meals.isEmpty()) {
-            tips.postValue("您还未选择任何菜品！");
-            closeLoading.setValue(new Object());
-            return;
-        }
-        if (!canBuy()) {
-            tips.postValue("您的余额不足！");
-            closeLoading.setValue(new Object());
-            return;
-        }
-        if (student == null) {
-            tips.postValue("学生信息为空！");
-            closeLoading.setValue(new Object());
-            return;
-        }
-
-        ArrayList<Order> newOrders = getNewOrder(student, meals);
-        SpUtil.putOrders(newOrders);
-
-        HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
-        requestMap.put("requests", SpUtil.getOrders());
-        String jsonRequest = GsonUtil.objToJson(requestMap);
-
-        RequestBody body = RequestBody.create(MediaType.parse("application/json;charset=UTF-8"), jsonRequest);
-
-        HttpUtil.createOrder(body, new Observer<>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-
-            }
-
-            @Override
-            public void onNext(Result result) {
-                if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
-                    SpUtil.clearOrders();
-                    hasFailOrder.postValue(false);
-                } else {
-                    hasFailOrder.postValue(true);
-                }
-                orderResult.postValue(new Object());
-
-                balance.postValue(String.format(Locale.getDefault(), "%s%.1f", balanceStr, studentBalance));
-
-                student.setNBalance(studentBalance);
-                SpUtil.setStudentBalance(student);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                hasFailOrder.postValue(true);
-                orderResult.postValue(new Object());
-
-                balance.postValue(String.format(Locale.getDefault(), "%s%.1f", balanceStr, studentBalance));
-
-                student.setNBalance(studentBalance);
-                SpUtil.setStudentBalance(student);
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
-    }
-
-    private ArrayList<Order> getNewOrder(Student student, ArrayList<Meal> meals) {
+    private Pair<String, ArrayList<Order>> getNewOrder(Student student, ArrayList<Meal> meals) {
         ArrayList<Order> orders = new ArrayList<>();
         String[] times = TimeUtil.getStringTime();
         String deviceNumber = String.format(Locale.getDefault(), "%02d", SpUtil.getDeviceNumber());
@@ -284,7 +225,50 @@ public class OrderViewModel extends BaseViewModel {
             order.setDCreate(create);
             orders.add(order);
         }
-        return orders;
+        return new Pair<>(billCode, orders);
+    }
+
+    private void uploadOrders() {
+        HashMap<String, ArrayList<Order>> orderMap = SpUtil.getUploadOrders();
+        Set<String> keys = orderMap.keySet();
+        ArrayList<Order> orders = new ArrayList<>();
+        for (String key : keys) {
+            ArrayList<Order> order = orderMap.get(key);
+            if (order == null) {
+                continue;
+            }
+            orders.addAll(order);
+        }
+
+        HashMap<String, ArrayList<Order>> requestMap = new HashMap<>();
+        requestMap.put("requests", orders);
+        String jsonRequest = GsonUtil.objToJson(requestMap);
+
+        RequestBody body = RequestBody.create(MediaType.parse("application/json;charset=UTF-8"), jsonRequest);
+
+        HttpUtil.createOrder(body, new Observer<>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Result result) {
+                if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
+                    SpUtil.removeOrders(keys);
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                hasFailOrder.postValue(true);
+            }
+
+            @Override
+            public void onComplete() {
+                hasFailOrder.postValue(!SpUtil.getOrders().isEmpty());
+            }
+        });
     }
 
     public void bindRfid(String rfid, Student student) {
@@ -298,10 +282,9 @@ public class OrderViewModel extends BaseViewModel {
             public void onNext(Result result) {
                 closeLoading.setValue(new Object());
                 if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
-                    nfcNumber.postValue(nfcStr + rfid);
-
                     student.setNfcId(rfid);
-                    SpUtil.setStudentNfc(student);
+                    SpUtil.setStudent(student);
+                    showStatusInfo(student);
                 }
                 tips.postValue(result.getMessage());
             }
@@ -371,14 +354,14 @@ public class OrderViewModel extends BaseViewModel {
         return meals.contains(meal);
     }
 
-    public boolean canBuy() {
+    public double getStudentBalance() {
         ArrayList<Meal> meals = getMealSelectList().getValue();
         if (meals == null) {
-            return false;
+            return -1;
         }
         String balance = getBalance().getValue();
         if (balance == null) {
-            return false;
+            return -1;
         }
         try {
             double allBalance = 0;
@@ -386,12 +369,11 @@ public class OrderViewModel extends BaseViewModel {
                 allBalance += meal.getNSum();
             }
             double balanceNum = Double.parseDouble(balance.replace(balanceStr, ""));
-            studentBalance = balanceNum - allBalance;
-            return studentBalance >= 0;
+            return balanceNum - allBalance;
         } catch (Exception ignored) {
 
         }
-        return false;
+        return -1;
     }
 
     public boolean hasSportsData() {
@@ -439,6 +421,10 @@ public class OrderViewModel extends BaseViewModel {
 
     public boolean cantPick() {
         return orderStatus.getValue() != OrderStatus.pick;
+    }
+
+    public MutableLiveData<OrderStatus> getOrderStatus() {
+        return orderStatus;
     }
 
     public MutableLiveData<Object> getOrderResult() {

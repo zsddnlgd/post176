@@ -8,8 +8,6 @@
     </style>
 
     <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog">
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowFullscreen">true</item>
         <item name="colorPrimary">@color/color_main</item>
         <item name="colorPrimaryVariant">@color/color_main</item>
         <item name="colorOnPrimary">@color/color_main</item>

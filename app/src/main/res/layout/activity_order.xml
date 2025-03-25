@@ -208,7 +208,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
@@ -260,7 +260,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:background="@color/color_main"
                 android:gravity="center_vertical"
@@ -287,7 +287,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:orientation="horizontal">
 
@@ -324,6 +324,7 @@
                 android:layout_height="40dp"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
+                android:baselineAligned="false"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -358,7 +359,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:layout_marginStart="100dp"
+                    android:layout_toStartOf="@id/confirm_button"
+                    android:layout_toEndOf="@id/next_button"
+                    android:gravity="center"
                     android:text="@string/total_amount"
                     android:textColor="@color/color_main"
                     android:textSize="30sp" />
@@ -369,27 +372,28 @@
                     android:layout_height="50dp"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:layout_marginEnd="200dp"
+                    android:layout_marginEnd="50dp"
                     android:background="@drawable/bg_button"
                     android:gravity="center"
                     android:text="@string/ok"
                     android:textColor="@color/white"
                     android:textSize="20sp"
-                    android:visibility="gone" />
+                    android:visibility="invisible"
+                    tools:visibility="visible" />
 
                 <TextView
                     android:id="@+id/next_button"
                     android:layout_width="100dp"
                     android:layout_height="50dp"
-                    android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:layout_marginEnd="50dp"
+                    android:layout_marginStart="50dp"
                     android:background="@drawable/bg_button"
                     android:gravity="center"
                     android:text="@string/next"
                     android:textColor="@color/white"
                     android:textSize="20sp"
-                    android:visibility="gone" />
+                    android:visibility="invisible"
+                    tools:visibility="visible" />
 
             </RelativeLayout>
 

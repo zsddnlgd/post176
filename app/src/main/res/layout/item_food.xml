@@ -17,6 +17,7 @@
         android:gravity="center"
         android:textColor="@color/black"
         android:textSize="16sp"
+        android:textStyle="bold"
         tools:text="麻辣鸡丝" />
 
     <TextView
@@ -25,14 +26,14 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="33dp"
         android:scaleType="fitXY"
         android:textColor="@color/black"
         android:textSize="16sp"
+        android:textStyle="bold"
         tools:text="12元" />
 
     <TextView
-        android:textStyle="bold"
         android:id="@+id/food_empty"
         android:layout_width="30dp"
         android:layout_height="30dp"
@@ -42,6 +43,7 @@
         android:text="@string/sell_out"
         android:textColor="@color/red"
         android:textSize="11sp"
+        android:textStyle="bold"
         android:visibility="invisible"
         tools:visibility="visible" />
 
@@ -51,6 +53,7 @@
         android:layout_height="30dp"
         android:layout_alignParentEnd="true"
         android:layout_centerInParent="true"
+        android:layout_marginEnd="3dp"
         android:background="@drawable/ic_select"
         android:visibility="invisible"
         tools:visibility="visible" />
