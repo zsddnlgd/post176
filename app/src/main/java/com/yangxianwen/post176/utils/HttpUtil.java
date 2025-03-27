@@ -5,6 +5,7 @@ import android.util.Log;
 import com.yangxianwen.post176.bean.Balance;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Nfc;
+import com.yangxianwen.post176.bean.Recommend;
 import com.yangxianwen.post176.bean.Result;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.bean.StudentSports;
@@ -73,6 +74,9 @@ public class HttpUtil {
 
         @GET("/api/ReferenceValue/GetMaxIDByStudCode")
         Observable<ArrayList<StudentSports>> getStudentSports();
+
+        @GET("/api/OrderInfo/get-recommendation/{cBillCode}")
+        Observable<Recommend> getRecommendation(@Path("cBillCode") String billCode);
     }
 
     /**
@@ -270,6 +274,18 @@ public class HttpUtil {
         NetService netService = retrofit.create(NetService.class);
 
         Observable<ArrayList<StudentSports>> observable = netService.getStudentSports();
+
+        observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(observer);
+    }
+
+    public static void getRecommendation(String billCode, Observer<Recommend> observer) {
+        Retrofit retrofit = getRetrofit(SpUtil.getIpAddress());
+
+        NetService netService = retrofit.create(NetService.class);
+
+        Observable<Recommend> observable = netService.getRecommendation(billCode);
 
         observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

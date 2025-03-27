@@ -22,13 +22,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.observers.DisposableObserver;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -38,11 +39,13 @@ public class MainViewModel extends BaseViewModel {
     private final MutableLiveData<Integer> studentSize = new MutableLiveData<>();
     private final MutableLiveData<Integer> studentProgress = new MutableLiveData<>();
     private final MutableLiveData<Object> syncFinish = new MutableLiveData<>();
+    private final ExecutorService executorService;
     private int successNumber;
     private int failNumber;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
+        executorService = Executors.newSingleThreadExecutor();
     }
 
     public void registerStatusPic() {
@@ -59,11 +62,10 @@ public class MainViewModel extends BaseViewModel {
                 SpUtil.putStudent(students);
 
                 String[] imgFileDir = new File(FileUtil.REGISTER_DIR).list();
-                List<String> imgFiles = imgFileDir == null ? new ArrayList<>() : Arrays.asList(imgFileDir);
+                ArrayList<String> imgFiles = imgFileDir == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(imgFileDir));
 
-                Log.i(TAG, "registerStatusPic imgFiles = " + imgFiles);
-
-                ArrayList<Student> subList = new ArrayList<>();
+                ArrayList<String> containList = new ArrayList<>();
+                ArrayList<String> downloadList = new ArrayList<>();
                 for (Student student : students) {
                     //去掉无效图片
                     if (student.getCPic() == null) {
@@ -76,20 +78,42 @@ public class MainViewModel extends BaseViewModel {
                         continue;
                     }
                     //去掉重复图片
-                    if (imgFiles.contains(student.getCPic().replace("/Pic/StuImg/", ""))) {
-                        continue;
+                    String picName = student.getCPic().replace("/Pic/StuImg/", "");
+                    if (imgFiles.contains(picName)) {
+                        containList.add(picName);
+                    } else {
+                        downloadList.add(picName);
                     }
-                    subList.add(student);
                 }
-                if (subList.isEmpty()) {
+
+                //删除库中没有的数据
+                executorService.execute(() -> {
+                    imgFiles.removeAll(containList);
+                    Log.i(TAG, "delete imgFiles size = " + imgFiles.size());
+                    for (String imgFile : imgFiles) {
+                        File registerFile = new File(FileUtil.REGISTER_DIR + File.separator + imgFile);
+                        if (registerFile.exists() && registerFile.delete()) {
+                            Log.i(TAG, "deleteRegisterFile fileName = " + imgFile);
+                        }
+                        File saveImgFile = new File(FileUtil.SAVE_IMG_DIR + File.separator + imgFile);
+                        if (saveImgFile.exists() && saveImgFile.delete()) {
+                            Log.i(TAG, "deleteSaveImgFile fileName = " + imgFile);
+                        }
+                        File saveFeatureFile = new File(FileUtil.SAVE_FEATURE_DIR + File.separator + imgFile);
+                        if (saveFeatureFile.exists() && saveFeatureFile.delete()) {
+                            Log.i(TAG, "deleteSaveFeatureFile fileName = " + imgFile);
+                        }
+                    }
+                });
+
+                if (downloadList.isEmpty()) {
+                    closeLoading.postValue(new Object());
                     tips.postValue("您的数据已为最新了！");
                     return;
                 }
 
-                studentSize.postValue(subList.size());
-
                 //递归下载图片
-                downLoadPhoto(subList, subList.size());
+                downLoadPhoto(downloadList, downloadList.size());
             }
 
             @Override
@@ -105,11 +129,10 @@ public class MainViewModel extends BaseViewModel {
         });
     }
 
-    private void downLoadPhoto(ArrayList<Student> students, int size) {
-        String picPath = students.get(0).getCPic();
-        String filePath = picPath.replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
-
-        HttpUtil.downloadStudentPhoto(picPath, new Observer<>() {
+    private void downLoadPhoto(ArrayList<String> downloadList, int size) {
+        String downPath = "/Pic/StuImg/" + downloadList.get(0);
+        String savePath = FileUtil.REGISTER_DIR + File.separator + downloadList.get(0);
+        HttpUtil.downloadStudentPhoto(downPath, new Observer<>() {
             @Override
             public void onSubscribe(Disposable d) {
 
@@ -119,22 +142,9 @@ public class MainViewModel extends BaseViewModel {
             public void onNext(ResponseBody responseBody) {
                 successNumber++;
 
-                boolean result = FileUtil.savePhoto(filePath, responseBody.byteStream());
-                if (!result) {
-                    Log.e(TAG, "savePhoto fail");
-                }
+                FileUtil.getInstance().savePhoto(savePath, responseBody.byteStream());
 
-                students.remove(0);
-                studentProgress.postValue(size - students.size());
-
-                if (students.isEmpty()) {
-                    tips.postValue("下载图片完成：成功" + successNumber + "个，" + "失败" + failNumber + "个");
-                } else {
-                    Observable.timer(300, TimeUnit.MILLISECONDS)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .blockingSubscribe(aLong -> downLoadPhoto(students, size));
-                }
+                downLoadPhotoTimer(downloadList, size);
             }
 
             @Override
@@ -143,17 +153,7 @@ public class MainViewModel extends BaseViewModel {
 
                 Log.e(TAG, "downloadPhoto fail message = " + e.getMessage());
 
-                students.remove(0);
-                studentProgress.postValue(size - students.size());
-
-                if (students.isEmpty()) {
-                    tips.postValue("下载图片完成：成功" + successNumber + "个，" + "失败" + failNumber + "个");
-                } else {
-                    Observable.timer(300, TimeUnit.MILLISECONDS)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .blockingSubscribe(aLong -> downLoadPhoto(students, size));
-                }
+                downLoadPhotoTimer(downloadList, size);
             }
 
             @Override
@@ -161,6 +161,35 @@ public class MainViewModel extends BaseViewModel {
 
             }
         });
+    }
+
+    private void downLoadPhotoTimer(ArrayList<String> downloadList, int size) {
+        downloadList.remove(0);
+        studentSize.postValue(size);
+        studentProgress.postValue(size - downloadList.size());
+
+        if (downloadList.isEmpty()) {
+            tips.postValue("下载图片完成：成功" + successNumber + "个，" + "失败" + failNumber + "个");
+            return;
+        }
+
+        Observable.timer(500, TimeUnit.MILLISECONDS)
+                .subscribe(new DisposableObserver<>() {
+                    @Override
+                    public void onNext(Long aLong) {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        downLoadPhoto(downloadList, size);
+                    }
+                });
     }
 
     public void syncStudentInfo() {

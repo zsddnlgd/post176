@@ -12,10 +12,8 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.yangxianwen.post176.base.BaseMvvmPresentation;
 import com.yangxianwen.post176.bean.Meal;
-import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.ActivityOrderBinding;
-import com.yangxianwen.post176.manager.LiveDataManager;
-import com.yangxianwen.post176.utils.FileUtil;
+import com.yangxianwen.post176.enmu.OrderStatus;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
 
 import java.io.File;
@@ -24,10 +22,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityOrderBinding> {
-
-    protected LiveDataManager mLiveDataManager;
-
-    private Student student;
 
     private double totalPrice = 0;
 
@@ -46,16 +40,12 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        initFace();
-
         initObserveForever();
 
         initListener();
     }
 
     private void initObserveForever() {
-        mLiveDataManager = new LiveDataManager();
-
         mLiveDataManager.observeForever(mViewModel.getName(), s -> {
             if (s == null) {
                 return;
@@ -103,6 +93,17 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
                 return;
             }
             mBinding.iCalorie.setText(s);
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getHeadImage(), s -> {
+            if (s == null) {
+                return;
+            }
+            if ("transparent".equals(s)) {
+                Glide.with(getContext()).load(R.color.transparent).into(mBinding.faceIcon);
+            } else {
+                Glide.with(getContext()).load(new File(s)).into(mBinding.faceIcon);
+            }
         });
 
         mLiveDataManager.observeForever(mViewModel.getHasFailOrder(), aBoolean -> {
@@ -171,18 +172,33 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
             //更新菜品总价
             updatePrice(meals);
         });
-    }
 
-    private void initFace() {
-        String filePath = student.getCPic().replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
-        Glide.with(getContext()).load(new File(filePath)).into(mBinding.faceIcon);
+        mLiveDataManager.observeForever(mViewModel.getOrderStatus(), status -> {
+            if (status == null) {
+                return;
+            }
+
+            if (status == OrderStatus.createOrder) {
+                mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元，请打餐！", totalPrice));
+
+                mBinding.confirmButton.setText(getResources().getString(R.string.next));
+                mBinding.confirmButton.setClickable(true);
+                mBinding.confirmButton.setVisibility(View.VISIBLE);
+            }
+        });
+
+        mLiveDataManager.observeForever(mViewModel.getOrderFinish(), o -> {
+            if (o == null) {
+                return;
+            }
+            dismiss();
+        });
     }
 
     private void initListener() {
         mBinding.confirmButton.setOnClickListener(v -> {
             v.setClickable(false);
-            mLiveDataManager.clearAllObservers();
-            dismiss();
+            mViewModel.getOrderFinish().postValue(new Object());
         });
     }
 
@@ -233,16 +249,5 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
 
     public void setViewModel(OrderViewModel viewModel) {
         mViewModel = viewModel;
-    }
-
-    public void setStudent(Student student) {
-        this.student = student;
-    }
-
-    public void onSelectConfirm() {
-        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元，请打餐！", totalPrice));
-        mBinding.confirmButton.setText(getResources().getString(R.string.next));
-        mBinding.confirmButton.setClickable(true);
-        mBinding.confirmButton.setVisibility(View.VISIBLE);
     }
 }

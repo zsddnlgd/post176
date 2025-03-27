@@ -2,6 +2,7 @@ package com.yangxianwen.post176;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,7 +19,6 @@ import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.databinding.ActivityOrderBinding;
 import com.yangxianwen.post176.enmu.OrderStatus;
 import com.yangxianwen.post176.resolver.BarcodeScannerResolver;
-import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.OrderViewModel;
@@ -33,6 +33,8 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     private OrderDisplay orderDisplay;
 
     private final ArrayList<View> items = new ArrayList<>();
+
+    private final Handler mHandler = new Handler();
 
     private BarcodeScannerResolver mBarcodeScannerResolver;
 
@@ -147,6 +149,17 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             mBinding.iCalorie.setText(s);
         });
 
+        mLiveDataManager.observeForever(mViewModel.getHeadImage(), s -> {
+            if (s == null) {
+                return;
+            }
+            if ("transparent".equals(s)) {
+                Glide.with(getActivity()).load(R.color.transparent).into(mBinding.faceIcon);
+            } else {
+                Glide.with(getActivity()).load(new File(s)).into(mBinding.faceIcon);
+            }
+        });
+
         mLiveDataManager.observeForever(mViewModel.getHasFailOrder(), aBoolean -> {
             if (aBoolean == null) {
                 return;
@@ -213,13 +226,19 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             }
         });
 
-        mLiveDataManager.observeForever(mViewModel.getOrderResult(), o -> {
+        mLiveDataManager.observeForever(mViewModel.getOrderFinish(), o -> {
             if (o == null) {
                 return;
             }
+            dismissLoading();
+            orderFinish();
+        });
 
-            showLoading("正在打餐，请等待...");
-            orderDisplay.onSelectConfirm();
+        mLiveDataManager.observeForever(mViewModel.getRecommendText(), s -> {
+            if (s == null) {
+                return;
+            }
+            setLoadingText(s);
         });
     }
 
@@ -227,7 +246,14 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         mBinding.face.initView();
         mBinding.face.setRecognizeResultListener(result -> {
             Student student = SpUtil.getStudentByPic(String.format("/Pic/StuImg/%s.jpg", result.getUserName()));
-            showStudentInfo(student);
+            if (student != null) {
+                //显示副屏
+                showPresentation();
+                //保证副屏内容先显示，延迟显示学生详情
+                mHandler.postDelayed(() -> showStudentInfo(student), 500);
+            } else {
+                showLongToast("未获取到学生信息，请更新数据后再试！");
+            }
         });
     }
 
@@ -245,7 +271,14 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             barcode = barcode.replaceFirst("0000000", "");
             if (currentStudent == null) {
                 Student student = SpUtil.getStudentByNfc(barcode);
-                showStudentInfo(student);
+                if (student != null) {
+                    //显示副屏
+                    showPresentation();
+                    //保证副屏内容先显示，延迟显示学生详情
+                    mHandler.postDelayed(() -> showStudentInfo(student), 500);
+                } else {
+                    showLongToast("未获取到学生信息，请绑定后再试！");
+                }
             } else {
                 showLoading("正在绑定NFC...");
                 mViewModel.bindRfid(barcode, currentStudent);
@@ -281,14 +314,14 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             }
 
             showLoading("正在打餐，请等待...");
-            orderDisplay.onSelectConfirm();
 
+            mViewModel.getOrderStatus().setValue(OrderStatus.createOrder);
             mViewModel.createLocalOrder(currentStudent, studentBalance, meals);
         });
         mBinding.nextButton.setOnClickListener(v -> {
             v.setClickable(false);
             //取消打餐
-            orderDisplay.dismiss();
+            mViewModel.getOrderFinish().postValue(new Object());
         });
     }
 
@@ -356,6 +389,11 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元", totalPrice));
     }
 
+    private void clearPrice() {
+        double totalPrice = 0;
+        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元", totalPrice));
+    }
+
     private void updateCalorie() {
         if (!mViewModel.hasSportsData()) {
             for (View item : items) {
@@ -378,22 +416,32 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         }
     }
 
-    private void showPresentation(Student student) {
+    private void clearCalorie() {
+        for (View item : items) {
+            item.setBackgroundResource(R.drawable.bg_food);
+        }
+    }
+
+    private void clearSelect() {
+        mViewModel.getMealSelectList().setValue(new ArrayList<>());
+        for (View item : items) {
+            View selectView = item.findViewById(R.id.food_select);
+            selectView.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    private void showPresentation() {
+        mViewModel.getOrderFinish().setValue(null);
+
         orderDisplay = new OrderDisplay(this, getPresentationDisplays());
         orderDisplay.setViewModel(mViewModel);
-        orderDisplay.setOnDismissListener(dialog -> {
-            dismissLoading();
-            orderFinish();
-        });
-        orderDisplay.setStudent(student);
         orderDisplay.show();
     }
 
     private void orderFinish() {
         currentStudent = null;
 
-        mBinding.face.reStart();
-        Glide.with(getActivity()).load(R.color.transparent).into(mBinding.faceIcon);
+        mBinding.face.start();
 
         mViewModel.getOrderStatus().setValue(OrderStatus.identify);
         mViewModel.clearStatusInfo();
@@ -401,35 +449,18 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         mBinding.confirmButton.setVisibility(View.INVISIBLE);
         mBinding.nextButton.setVisibility(View.INVISIBLE);
 
-        mViewModel.getMealSelectList().setValue(new ArrayList<>());
-        for (View item : items) {
-            View selectView = item.findViewById(R.id.food_select);
-            selectView.setVisibility(View.INVISIBLE);
-            View emptyView = item.findViewById(R.id.food_empty);
-            Meal meal = (Meal) item.getTag();
-            if (mViewModel.containsMealEmpty(meal)) {
-                emptyView.setVisibility(View.VISIBLE);
-            } else {
-                emptyView.setVisibility(View.INVISIBLE);
-            }
-        }
-
-        //更新总价
-        updatePrice();
-        //更新卡路里建议
-        updateCalorie();
+        //清空选中状态
+        clearSelect();
+        //清空总价
+        clearPrice();
+        //清空卡路里建议
+        clearCalorie();
     }
 
     private void showStudentInfo(Student student) {
-        if (student == null) {
-            showToast("未获取到学生信息");
-            return;
-        }
-
         currentStudent = student;
 
-        String filePath = student.getCPic().replace("/Pic/StuImg", FileUtil.REGISTER_DIR);
-        Glide.with(getActivity()).load(new File(filePath)).into(mBinding.faceIcon);
+        mBinding.face.stop();
 
         mViewModel.getOrderStatus().setValue(OrderStatus.pick);
         mViewModel.showStatusInfo(student);
@@ -443,8 +474,6 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         updatePrice();
         //更新卡路里建议
         updateCalorie();
-        //显示副屏
-        showPresentation(student);
         //实时查询余额
         getBalance(student);
     }

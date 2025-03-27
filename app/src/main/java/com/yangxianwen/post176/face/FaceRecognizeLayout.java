@@ -4,8 +4,6 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.hardware.Camera;
-import android.os.Handler;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -73,10 +71,6 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
      * 失败重试间隔时间（ms）
      */
     private static final long FAIL_RETRY_INTERVAL = 1000;
-    /**
-     * 识别成功后，回调间隔（ms）
-     */
-    private static final long CALL_BACK_INTERVAL = 500;
     /**
      * 出错重试最大次数
      */
@@ -147,25 +141,6 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
     private static final float SIMILAR_THRESHOLD = 0.8F;
 
     private OnRecognizeResultListener mRecognizeResultListener;
-
-    private final Handler mHandler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            CompareResult result = (CompareResult) msg.obj;
-            if (result == null) {
-                return true;
-            }
-            //回调识别结果
-            if (mRecognizeResultListener != null) {
-                mRecognizeResultListener.onRecognizeResult(result);
-            }
-            //停止预览
-            if (cameraHelper != null && !cameraHelper.isStopped()) {
-                cameraHelper.stop();
-            }
-            return true;
-        }
-    });
 
     public FaceRecognizeLayout(@NonNull Context context) {
         this(context, null);
@@ -247,9 +222,15 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
         }
     }
 
-    public void reStart() {
+    public void start() {
         if (cameraHelper != null && cameraHelper.isStopped()) {
             cameraHelper.start();
+        }
+    }
+
+    public void stop() {
+        if (cameraHelper != null && !cameraHelper.isStopped()) {
+            cameraHelper.stop();
         }
     }
 
@@ -618,12 +599,10 @@ public class FaceRecognizeLayout extends FrameLayout implements ViewTreeObserver
                             }
                             requestFeatureStatusMap.put(requestId, RequestFeatureStatus.SUCCEED);
                             faceHelper.setName(requestId, getResources().getString(R.string.recognize_success_notice, compareResult.getUserName()));
-                            //回调人脸识别结果
-                            mHandler.removeMessages(1);
-                            Message message = Message.obtain();
-                            message.obj = compareResult;
-                            message.what = 1;
-                            mHandler.sendMessageDelayed(message, CALL_BACK_INTERVAL);
+                            //回调识别结果
+                            if (mRecognizeResultListener != null) {
+                                mRecognizeResultListener.onRecognizeResult(compareResult);
+                            }
                         } else {
                             faceHelper.setName(requestId, getResources().getString(R.string.recognize_failed_notice, "NOT_REGISTERED"));
                             retryRecognizeDelayed(requestId);

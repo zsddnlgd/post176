@@ -1,6 +1,7 @@
 package com.yangxianwen.post176.viewmodel;
 
 import android.app.Application;
+import android.util.Log;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -11,10 +12,12 @@ import com.yangxianwen.post176.base.BaseViewModel;
 import com.yangxianwen.post176.bean.Balance;
 import com.yangxianwen.post176.bean.Meal;
 import com.yangxianwen.post176.bean.Order;
+import com.yangxianwen.post176.bean.Recommend;
 import com.yangxianwen.post176.bean.Result;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.bean.StudentSports;
 import com.yangxianwen.post176.enmu.OrderStatus;
+import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.GsonUtil;
 import com.yangxianwen.post176.utils.HttpUtil;
 import com.yangxianwen.post176.utils.SpUtil;
@@ -34,7 +37,7 @@ import okhttp3.RequestBody;
 public class OrderViewModel extends BaseViewModel {
 
     private final MutableLiveData<OrderStatus> orderStatus = new MutableLiveData<>(OrderStatus.identify);
-    private final MutableLiveData<Object> orderResult = new MutableLiveData<>();
+    private final MutableLiveData<Object> orderFinish = new MutableLiveData<>();
     private final MutableLiveData<String> finish = new MutableLiveData<>();
     private final MutableLiveData<String> name = new MutableLiveData<>();
     private final MutableLiveData<String> className = new MutableLiveData<>();
@@ -43,10 +46,12 @@ public class OrderViewModel extends BaseViewModel {
     private final MutableLiveData<String> distance = new MutableLiveData<>();
     private final MutableLiveData<String> calorie = new MutableLiveData<>();
     private final MutableLiveData<String> nfcNumber = new MutableLiveData<>();
+    private final MutableLiveData<String> headImage = new MutableLiveData<>();
     private final MutableLiveData<ArrayList<Meal>> mealList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<Meal>> mealSelectList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<ArrayList<Meal>> mealEmptyList = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> hasFailOrder = new MutableLiveData<>(false);
+    private final MutableLiveData<String> recommendText = new MutableLiveData<>();
     private final String nameStr;
     private final String classStr;
     private final String balanceStr;
@@ -73,17 +78,19 @@ public class OrderViewModel extends BaseViewModel {
     }
 
     public void showStatusInfo(Student student) {
-        name.setValue(nameStr + (student != null && student.getCStudName() != null ? student.getCStudName() : ""));
-        className.setValue(classStr + (student != null && student.getCClass() != null ? student.getCClass() : ""));
-        balance.setValue(balanceStr + (student != null ? student.getNBalance() : "0.0"));
-        nfcNumber.setValue(nfcStr + (student != null && student.getNfcId() != null ? student.getNfcId() : ""));
-        StudentSports sports = SpUtil.getStudentSportsByCode(student != null ? student.getCStudCode() : "");
+        headImage.setValue(student.getCPic().replace("/Pic/StuImg", FileUtil.REGISTER_DIR));
+        name.setValue(nameStr + student.getCStudName());
+        className.setValue(classStr + student.getCClass());
+        balance.setValue(balanceStr + student.getNBalance());
+        nfcNumber.setValue(nfcStr + (student.getNfcId() != null ? student.getNfcId() : ""));
+        StudentSports sports = SpUtil.getStudentSportsByCode(student.getCStudCode());
         stepNumber.setValue(stepStr + (sports != null ? sports.getIStepNumber() : "0"));
         distance.setValue(distanceStr + (sports != null ? sports.getIDistance() : "0"));
         calorie.setValue(calorieStr + (sports != null ? sports.getNCalorie() : "0.0"));
     }
 
     public void clearStatusInfo() {
+        headImage.setValue("transparent");
         name.setValue(nameStr);
         className.setValue(classStr);
         balance.setValue(balanceStr);
@@ -203,7 +210,7 @@ public class OrderViewModel extends BaseViewModel {
         SpUtil.setStudent(student);
         showStatusInfo(student);
 
-        uploadOrders();
+        uploadOrders(newOrder.first);
     }
 
     private Pair<String, ArrayList<Order>> getNewOrder(Student student, ArrayList<Meal> meals) {
@@ -228,7 +235,7 @@ public class OrderViewModel extends BaseViewModel {
         return new Pair<>(billCode, orders);
     }
 
-    private void uploadOrders() {
+    private void uploadOrders(String billCode) {
         HashMap<String, ArrayList<Order>> orderMap = SpUtil.getUploadOrders();
         Set<String> keys = orderMap.keySet();
         ArrayList<Order> orders = new ArrayList<>();
@@ -256,6 +263,7 @@ public class OrderViewModel extends BaseViewModel {
             public void onNext(Result result) {
                 if (result.getCode() == Constants.NFC_ID_UPDATE_SUCCESS) {
                     SpUtil.removeOrders(keys);
+                    getRecommendation(billCode);
                 }
             }
 
@@ -267,6 +275,32 @@ public class OrderViewModel extends BaseViewModel {
             @Override
             public void onComplete() {
                 hasFailOrder.postValue(!SpUtil.getOrders().isEmpty());
+            }
+        });
+    }
+
+    private void getRecommendation(String billCode) {
+        HttpUtil.getRecommendation(billCode, new Observer<>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+
+            }
+
+            @Override
+            public void onNext(Recommend recommend) {
+                if (orderStatus.getValue() == OrderStatus.createOrder) {
+                    recommendText.postValue(recommend.getRecommendation());
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
             }
         });
     }
@@ -379,15 +413,17 @@ public class OrderViewModel extends BaseViewModel {
     public boolean hasSportsData() {
         String calorie = getCalorie().getValue();
         if (calorie == null) {
+            Log.i(TAG, "hasSportsData: 1");
             return false;
         }
         try {
             double calorieNum = Double.parseDouble(calorie.replace(calorieStr, ""));
+            Log.i(TAG, "hasSportsData: calorieNum " + calorieNum);
             if (calorieNum > 0) {
                 return true;
             }
         } catch (Exception ignored) {
-
+            Log.i(TAG, "hasSportsData: 2");
         }
         return false;
     }
@@ -427,8 +463,8 @@ public class OrderViewModel extends BaseViewModel {
         return orderStatus;
     }
 
-    public MutableLiveData<Object> getOrderResult() {
-        return orderResult;
+    public MutableLiveData<Object> getOrderFinish() {
+        return orderFinish;
     }
 
     public MutableLiveData<String> getFinish() {
@@ -463,6 +499,10 @@ public class OrderViewModel extends BaseViewModel {
         return nfcNumber;
     }
 
+    public MutableLiveData<String> getHeadImage() {
+        return headImage;
+    }
+
     public MutableLiveData<ArrayList<Meal>> getMealList() {
         return mealList;
     }
@@ -477,5 +517,9 @@ public class OrderViewModel extends BaseViewModel {
 
     public MutableLiveData<Boolean> getHasFailOrder() {
         return hasFailOrder;
+    }
+
+    public MutableLiveData<String> getRecommendText() {
+        return recommendText;
     }
 }

@@ -114,6 +114,12 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
+    protected void setLoadingText(String text) {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.setContentText(text);
+        }
+    }
+
     protected void dismissLoading() {
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.dismiss();
