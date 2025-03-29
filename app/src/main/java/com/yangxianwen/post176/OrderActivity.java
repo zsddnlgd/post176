@@ -30,8 +30,6 @@ import java.util.Objects;
 
 public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrderBinding> {
 
-    private OrderDisplay orderDisplay;
-
     private final ArrayList<View> items = new ArrayList<>();
 
     private final Handler mHandler = new Handler();
@@ -226,19 +224,28 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
             }
         });
 
-        mLiveDataManager.observeForever(mViewModel.getOrderFinish(), o -> {
-            if (o == null) {
+        mLiveDataManager.observeForever(mViewModel.getOrderStatus(), status -> {
+            if (status == null) {
                 return;
             }
-            dismissLoading();
-            orderFinish();
+
+            if (status == OrderStatus.identify) {
+                dismissLoading();
+                orderFinish();
+            } else if (status == OrderStatus.pick) {
+                //保证副屏内容先显示，延迟显示学生详情
+                mHandler.postDelayed(this::showStudentInfo, 500);
+            }
         });
 
         mLiveDataManager.observeForever(mViewModel.getRecommendText(), s -> {
             if (s == null) {
                 return;
             }
-            setLoadingText(s);
+
+            if (mViewModel.getOrderStatus().getValue() == OrderStatus.createOrder) {
+                setLoadingText(s);
+            }
         });
     }
 
@@ -247,10 +254,11 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         mBinding.face.setRecognizeResultListener(result -> {
             Student student = SpUtil.getStudentByPic(String.format("/Pic/StuImg/%s.jpg", result.getUserName()));
             if (student != null) {
+                currentStudent = student;
+                //优先修改当前状态，避免副屏逻辑显示错误
+                mViewModel.getOrderStatus().setValue(OrderStatus.pick);
                 //显示副屏
                 showPresentation();
-                //保证副屏内容先显示，延迟显示学生详情
-                mHandler.postDelayed(() -> showStudentInfo(student), 500);
             } else {
                 showLongToast("未获取到学生信息，请更新数据后再试！");
             }
@@ -269,17 +277,18 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
                 return;
             }
             barcode = barcode.replaceFirst("0000000", "");
-            if (currentStudent == null) {
+            if (mViewModel.getOrderStatus().getValue() == OrderStatus.identify) {
                 Student student = SpUtil.getStudentByNfc(barcode);
                 if (student != null) {
+                    currentStudent = student;
+                    //优先修改当前状态，避免副屏逻辑显示错误
+                    mViewModel.getOrderStatus().setValue(OrderStatus.pick);
                     //显示副屏
                     showPresentation();
-                    //保证副屏内容先显示，延迟显示学生详情
-                    mHandler.postDelayed(() -> showStudentInfo(student), 500);
                 } else {
                     showLongToast("未获取到学生信息，请绑定后再试！");
                 }
-            } else {
+            } else if (mViewModel.getOrderStatus().getValue() == OrderStatus.pick) {
                 showLoading("正在绑定NFC...");
                 mViewModel.bindRfid(barcode, currentStudent);
             }
@@ -321,7 +330,7 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         mBinding.nextButton.setOnClickListener(v -> {
             v.setClickable(false);
             //取消打餐
-            mViewModel.getOrderFinish().postValue(new Object());
+            mViewModel.getOrderStatus().setValue(OrderStatus.identify);
         });
     }
 
@@ -431,19 +440,12 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
     }
 
     private void showPresentation() {
-        mViewModel.getOrderFinish().setValue(null);
-
-        orderDisplay = new OrderDisplay(this, getPresentationDisplays());
-        orderDisplay.setViewModel(mViewModel);
-        orderDisplay.show();
+        new OrderDisplay(getActivity(), getPresentationDisplays(), mViewModel).show();
     }
 
     private void orderFinish() {
-        currentStudent = null;
-
         mBinding.face.start();
 
-        mViewModel.getOrderStatus().setValue(OrderStatus.identify);
         mViewModel.clearStatusInfo();
 
         mBinding.confirmButton.setVisibility(View.INVISIBLE);
@@ -457,13 +459,10 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         clearCalorie();
     }
 
-    private void showStudentInfo(Student student) {
-        currentStudent = student;
-
+    private void showStudentInfo() {
         mBinding.face.stop();
 
-        mViewModel.getOrderStatus().setValue(OrderStatus.pick);
-        mViewModel.showStatusInfo(student);
+        mViewModel.showStatusInfo(currentStudent);
 
         mBinding.confirmButton.setClickable(true);
         mBinding.nextButton.setClickable(true);
@@ -475,6 +474,6 @@ public class OrderActivity extends BaseMvvmActivity<OrderViewModel, ActivityOrde
         //更新卡路里建议
         updateCalorie();
         //实时查询余额
-        getBalance(student);
+        getBalance(currentStudent);
     }
 }

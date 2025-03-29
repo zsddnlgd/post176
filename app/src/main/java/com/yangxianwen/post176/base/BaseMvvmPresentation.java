@@ -21,8 +21,11 @@ public abstract class BaseMvvmPresentation<VM extends BaseViewModel, VB extends 
 
     protected LiveDataManager mLiveDataManager;
 
-    public BaseMvvmPresentation(Context outerContext, Display display) {
+    protected abstract int getLayoutId();
+
+    public BaseMvvmPresentation(Context outerContext, Display display, VM viewModel) {
         super(outerContext, display, R.style.AppTheme);
+        mViewModel = viewModel;
     }
 
     @Override
@@ -34,11 +37,8 @@ public abstract class BaseMvvmPresentation<VM extends BaseViewModel, VB extends 
     }
 
     @Override
-    public void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
+    protected void onStop() {
+        super.onStop();
         mLiveDataManager.clearAllObservers();
     }
-
-    protected abstract int getLayoutId();
-
 }

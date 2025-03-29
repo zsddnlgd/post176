@@ -37,7 +37,6 @@ import okhttp3.RequestBody;
 public class OrderViewModel extends BaseViewModel {
 
     private final MutableLiveData<OrderStatus> orderStatus = new MutableLiveData<>(OrderStatus.identify);
-    private final MutableLiveData<Object> orderFinish = new MutableLiveData<>();
     private final MutableLiveData<String> finish = new MutableLiveData<>();
     private final MutableLiveData<String> name = new MutableLiveData<>();
     private final MutableLiveData<String> className = new MutableLiveData<>();
@@ -288,9 +287,7 @@ public class OrderViewModel extends BaseViewModel {
 
             @Override
             public void onNext(Recommend recommend) {
-                if (orderStatus.getValue() == OrderStatus.createOrder) {
-                    recommendText.postValue(recommend.getRecommendation());
-                }
+                recommendText.postValue(recommend.getRecommendation());
             }
 
             @Override
@@ -461,10 +458,6 @@ public class OrderViewModel extends BaseViewModel {
 
     public MutableLiveData<OrderStatus> getOrderStatus() {
         return orderStatus;
-    }
-
-    public MutableLiveData<Object> getOrderFinish() {
-        return orderFinish;
     }
 
     public MutableLiveData<String> getFinish() {

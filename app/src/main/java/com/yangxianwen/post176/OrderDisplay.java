@@ -2,6 +2,7 @@ package com.yangxianwen.post176;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,8 +28,10 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
 
     private final ArrayList<View> items = new ArrayList<>();
 
-    public OrderDisplay(Context outerContext, Display display) {
-        super(outerContext, display);
+    private final Handler mHandler = new Handler();
+
+    public OrderDisplay(Context outerContext, Display display, OrderViewModel viewModel) {
+        super(outerContext, display, viewModel);
     }
 
     @Override
@@ -178,27 +181,18 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
                 return;
             }
 
-            if (status == OrderStatus.createOrder) {
-                mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元，请打餐！", totalPrice));
-
-                mBinding.confirmButton.setText(getResources().getString(R.string.next));
-                mBinding.confirmButton.setClickable(true);
-                mBinding.confirmButton.setVisibility(View.VISIBLE);
+            if (status == OrderStatus.identify) {
+                orderFinish();
+            } else if (status == OrderStatus.createOrder) {
+                orderCreateFinish();
             }
-        });
-
-        mLiveDataManager.observeForever(mViewModel.getOrderFinish(), o -> {
-            if (o == null) {
-                return;
-            }
-            dismiss();
         });
     }
 
     private void initListener() {
         mBinding.confirmButton.setOnClickListener(v -> {
             v.setClickable(false);
-            mViewModel.getOrderFinish().postValue(new Object());
+            mViewModel.getOrderStatus().setValue(OrderStatus.identify);
         });
     }
 
@@ -247,7 +241,16 @@ public class OrderDisplay extends BaseMvvmPresentation<OrderViewModel, ActivityO
         mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元", totalPrice));
     }
 
-    public void setViewModel(OrderViewModel viewModel) {
-        mViewModel = viewModel;
+    private void orderFinish() {
+        mBinding.confirmButton.setVisibility(View.INVISIBLE);
+        //保证主屏逻辑处理完，延迟关闭副屏
+        mHandler.postDelayed(this::dismiss, 500);
+    }
+
+    private void orderCreateFinish() {
+        mBinding.confirmButton.setText(getResources().getString(R.string.next));
+        mBinding.confirmButton.setClickable(true);
+        mBinding.confirmButton.setVisibility(View.VISIBLE);
+        mBinding.totalAmountText.setText(String.format(Locale.getDefault(), "总金额：%.2f元，请打餐！", totalPrice));
     }
 }
