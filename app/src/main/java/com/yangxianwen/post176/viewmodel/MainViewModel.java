@@ -61,7 +61,7 @@ public class MainViewModel extends BaseViewModel {
             public void onNext(ArrayList<Student> students) {
                 SpUtil.putStudent(students);
 
-                String[] imgFileDir = new File(FileUtil.REGISTER_DIR).list();
+                String[] imgFileDir = new File(FileUtil.SAVE_IMG_DIR).list();
                 ArrayList<String> imgFiles = imgFileDir == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(imgFileDir));
 
                 ArrayList<String> containList = new ArrayList<>();
@@ -93,15 +93,16 @@ public class MainViewModel extends BaseViewModel {
                     for (String imgFile : imgFiles) {
                         File registerFile = new File(FileUtil.REGISTER_DIR + File.separator + imgFile);
                         if (registerFile.exists() && registerFile.delete()) {
-                            Log.i(TAG, "deleteRegisterFile fileName = " + imgFile);
+                            Log.i(TAG, "deleteRegister fileName = " + imgFile);
                         }
                         File saveImgFile = new File(FileUtil.SAVE_IMG_DIR + File.separator + imgFile);
                         if (saveImgFile.exists() && saveImgFile.delete()) {
-                            Log.i(TAG, "deleteSaveImgFile fileName = " + imgFile);
+                            Log.i(TAG, "deleteSaveImg fileName = " + imgFile);
                         }
-                        File saveFeatureFile = new File(FileUtil.SAVE_FEATURE_DIR + File.separator + imgFile);
+                        String featureName = imgFile.substring(0, imgFile.lastIndexOf("."));
+                        File saveFeatureFile = new File(FileUtil.SAVE_FEATURE_DIR + File.separator + featureName);
                         if (saveFeatureFile.exists() && saveFeatureFile.delete()) {
-                            Log.i(TAG, "deleteSaveFeatureFile fileName = " + imgFile);
+                            Log.i(TAG, "deleteSaveFeature featureName = " + featureName);
                         }
                     }
                 });

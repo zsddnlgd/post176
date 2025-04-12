@@ -22,6 +22,7 @@ public class SettingActivity extends BaseMvvmActivity<SettingViewModel, Activity
 
         mBinding.deviceNumber.setText(String.valueOf(SpUtil.getDeviceNumber()));
         mBinding.ipAddress.setText(SpUtil.getIpAddress());
+        mBinding.adminPassword.setText(SpUtil.getAdminPassword());
         mBinding.livenessDetect.setChecked(SpUtil.getLivenessDetect());
 
         mBinding.cancelButton.setOnClickListener(v -> finish());
@@ -35,6 +36,7 @@ public class SettingActivity extends BaseMvvmActivity<SettingViewModel, Activity
             }
             SpUtil.putDeviceNumber(number);
             SpUtil.putIpAddress(mBinding.ipAddress.getText().toString());
+            SpUtil.putAdminPassword(mBinding.adminPassword.getText().toString());
             SpUtil.putLivenessDetect(mBinding.livenessDetect.isChecked());
             finish();
         });

@@ -11,6 +11,7 @@ import com.yangxianwen.post176.bean.Order;
 import com.yangxianwen.post176.bean.Student;
 import com.yangxianwen.post176.bean.StudentSports;
 import com.yangxianwen.post176.bean.Turnover;
+import com.yangxianwen.post176.values.Constants;
 import com.yangxianwen.post176.values.Urls;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class SpUtil {
     private static final String device = "DeviceInfo";
     private static final String deviceNumberKey = "deviceId";
     private static final String ipAddressKey = "ipAddress";
+    private static final String adminPasswordKey = "adminPassword";
     private static final String livenessDetectKey = "livenessDetect";
     private static final String order = "OrderInfo";
     private static final String orderKey = "orderList";
@@ -78,6 +80,16 @@ public class SpUtil {
     public static String getIpAddress() {
         SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
         return sp.getString(ipAddressKey, Urls.main);
+    }
+
+    public static void putAdminPassword(String value) {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        sp.edit().putString(adminPasswordKey, value).apply();
+    }
+
+    public static String getAdminPassword() {
+        SharedPreferences sp = App.getIns().getSharedPreferences(device, Context.MODE_PRIVATE);
+        return sp.getString(adminPasswordKey, Constants.defAdminPassword);
     }
 
     public static void putLivenessDetect(boolean value) {

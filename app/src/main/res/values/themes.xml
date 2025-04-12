@@ -20,6 +20,13 @@
         <item name="buttonBarNeutralButtonStyle">@style/NeutralButtonStyle</item>
     </style>
 
+    <style name="EditTextTheme" parent="Widget.AppCompat.EditText">
+        <item name="colorAccent">@color/color_main</item>
+        <item name="buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/NeutralButtonStyle</item>
+    </style>
+
     <style name="PositiveButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
         <item name="android:textColor">@color/color_main</item>
     </style>

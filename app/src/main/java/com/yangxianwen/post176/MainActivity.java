@@ -1,9 +1,13 @@
 package com.yangxianwen.post176;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 
 import androidx.core.app.ActivityCompat;
 
@@ -13,8 +17,11 @@ import com.yangxianwen.post176.databinding.ActivityMainBinding;
 import com.yangxianwen.post176.face.FaceManageActivity;
 import com.yangxianwen.post176.service.UploadFailOrderService;
 import com.yangxianwen.post176.utils.ActiveUtil;
+import com.yangxianwen.post176.utils.NavigationBarUtil;
 import com.yangxianwen.post176.utils.SpUtil;
 import com.yangxianwen.post176.viewmodel.MainViewModel;
+
+import java.util.Objects;
 
 public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBinding> {
 
@@ -159,13 +166,44 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBi
 
     public void onSetting(View view) {
         //设置
-        Intent intent = new Intent(this, SettingActivity.class);
-        startActivity(intent);
+        EditText editText = (EditText) LayoutInflater.from(getActivity()).inflate(R.layout.dialog_edit, new FrameLayout(getActivity()), false);
+        AlertDialog alertDialog = new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                .setTitle("请输入管理员密码")
+                .setView(editText)
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    if (Objects.equals(SpUtil.getAdminPassword(), editText.getText().toString())) {
+                        //设置
+                        Intent intent = new Intent(this, SettingActivity.class);
+                        startActivity(intent);
+                    } else {
+                        showToast("密码错误");
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .create();
+        NavigationBarUtil.hideNavigationBar(alertDialog.getWindow());
+        alertDialog.show();
     }
 
     public void onRegister(View view) {
-        //注册人脸
-        startActivity(new Intent(this, FaceManageActivity.class));
+        EditText editText = (EditText) LayoutInflater.from(getActivity()).inflate(R.layout.dialog_edit, new FrameLayout(getActivity()), false);
+        AlertDialog alertDialog = new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                .setTitle("请输入管理员密码")
+                .setView(editText)
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    if (Objects.equals(SpUtil.getAdminPassword(), editText.getText().toString())) {
+                        //注册人脸
+                        startActivity(new Intent(this, FaceManageActivity.class));
+                    } else {
+                        showToast("密码错误");
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .create();
+        NavigationBarUtil.hideNavigationBar(alertDialog.getWindow());
+        alertDialog.show();
     }
 
     public void onExit(View view) {

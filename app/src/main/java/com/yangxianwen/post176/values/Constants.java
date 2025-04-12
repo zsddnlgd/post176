@@ -1,10 +1,8 @@
 package com.yangxianwen.post176.values;
 
-import android.os.Environment;
-
-import java.io.File;
-
 public class Constants {
+
+    public static final String defAdminPassword = "syp427";
 
     // 学生未找到
     public static final int STUDENT_NOT_FOUND = 1001;
