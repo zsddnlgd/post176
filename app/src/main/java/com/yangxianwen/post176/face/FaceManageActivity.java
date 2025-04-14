@@ -6,7 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.core.app.ActivityCompat;
@@ -19,12 +22,14 @@ import com.yangxianwen.post176.base.BaseActivity;
 import com.yangxianwen.post176.face.faceserver.FaceServer;
 import com.yangxianwen.post176.utils.FileUtil;
 import com.yangxianwen.post176.utils.NavigationBarUtil;
+import com.yangxianwen.post176.utils.SpUtil;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -180,6 +185,26 @@ public class FaceManageActivity extends BaseActivity {
     }
 
     public void clearFaces(View view) {
+        EditText editText = (EditText) LayoutInflater.from(getActivity()).inflate(R.layout.dialog_edit, new FrameLayout(getActivity()), false);
+        AlertDialog alertDialog = new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                .setTitle("请输入管理员密码")
+                .setView(editText)
+                .setPositiveButton(R.string.ok, (dialog, which) -> {
+                    if (Objects.equals(SpUtil.getAdminPassword(), editText.getText().toString())) {
+                        //清空人脸
+                        clearFaces();
+                    } else {
+                        showToast("密码错误");
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setCancelable(false)
+                .create();
+        NavigationBarUtil.hideNavigationBar(alertDialog.getWindow());
+        alertDialog.show();
+    }
+
+    private void clearFaces() {
         int faceNum = FaceServer.getInstance().getFaceNumber();
         if (faceNum == 0) {
             showToast(getString(R.string.batch_process_no_face_need_to_delete));

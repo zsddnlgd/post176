@@ -187,23 +187,8 @@ public class MainActivity extends BaseMvvmActivity<MainViewModel, ActivityMainBi
     }
 
     public void onRegister(View view) {
-        EditText editText = (EditText) LayoutInflater.from(getActivity()).inflate(R.layout.dialog_edit, new FrameLayout(getActivity()), false);
-        AlertDialog alertDialog = new AlertDialog.Builder(this, R.style.AlertDialogTheme)
-                .setTitle("请输入管理员密码")
-                .setView(editText)
-                .setPositiveButton(R.string.ok, (dialog, which) -> {
-                    if (Objects.equals(SpUtil.getAdminPassword(), editText.getText().toString())) {
-                        //注册人脸
-                        startActivity(new Intent(this, FaceManageActivity.class));
-                    } else {
-                        showToast("密码错误");
-                    }
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .setCancelable(false)
-                .create();
-        NavigationBarUtil.hideNavigationBar(alertDialog.getWindow());
-        alertDialog.show();
+        //注册人脸
+        startActivity(new Intent(this, FaceManageActivity.class));
     }
 
     public void onExit(View view) {
